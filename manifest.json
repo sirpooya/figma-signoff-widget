@@ -1,0 +1,12 @@
+{
+  "name": "Design Sign-Off Widget",
+  "id": "figma-signoff-widget",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "widget": {
+    "name": "Design Sign-Off",
+    "description": "A widget for tracking design sign-off status and dates"
+  }
+}

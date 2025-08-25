@@ -1,0 +1,37 @@
+{
+  "name": "figma-signoff-widget",
+  "version": "1.0.0",
+  "description": "A Figma widget for tracking design sign-off process with Persian date formatting",
+  "main": "code.js",
+  "scripts": {
+    "build": "echo 'No build process required for Figma widgets'",
+    "dev": "echo 'Use Figma development mode to test the widget'",
+    "test": "echo 'No test framework configured'"
+  },
+  "keywords": [
+    "figma",
+    "widget",
+    "design",
+    "signoff",
+    "persian",
+    "workflow",
+    "approval"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/figma-signoff-widget.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/figma-signoff-widget/issues"
+  },
+  "homepage": "https://github.com/yourusername/figma-signoff-widget#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "figma": {
+    "id": "figma-signoff-widget",
+    "name": "Design Sign-Off Widget"
+  }
+}
