@@ -1,12 +1,20 @@
 {
-  "name": "Design Sign-Off Widget",
-  "id": "figma-signoff-widget",
+  "name": "Design SignOff",
+  "id": "1542089813823718390",
   "api": "1.0.0",
-  "main": "code.js",
-  "ui": "ui.html",
-  "editorType": ["figma"],
-  "widget": {
-    "name": "Design Sign-Off",
-    "description": "A widget for tracking design sign-off status and dates"
+  "main": "dist/code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "documentAccess": "dynamic-page",
+  "editorType": [
+    "figma",
+    "figjam"
+  ],
+  "containsWidget": true,
+  "widgetApi": "1.0.0",
+  "networkAccess": {
+    "allowedDomains": [
+      "none"
+    ]
   }
 }

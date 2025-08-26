@@ -1,37 +1,46 @@
 {
-  "name": "figma-signoff-widget",
+  "name": "Design-SignOff",
   "version": "1.0.0",
-  "description": "A Figma widget for tracking design sign-off process with Persian date formatting",
-  "main": "code.js",
+  "description": "Your Figma widget",
   "scripts": {
-    "build": "echo 'No build process required for Figma widgets'",
-    "dev": "echo 'Use Figma development mode to test the widget'",
-    "test": "echo 'No test framework configured'"
+    "build": "esbuild widget-src/code.tsx --bundle --outfile=dist/code.js --target=es6",
+    "lint": "eslint --ext .ts,.tsx --ignore-pattern node_modules .",
+    "lint:fix": "eslint --ext .ts,.tsx --ignore-pattern node_modules --fix .",
+    "tsc": "tsc --noEmit -p widget-src",
+    "watch": "npm run build -- --watch"
   },
-  "keywords": [
-    "figma",
-    "widget",
-    "design",
-    "signoff",
-    "persian",
-    "workflow",
-    "approval"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/figma-signoff-widget.git"
+  "author": "",
+  "license": "",
+  "devDependencies": {
+    "@figma/eslint-plugin-figma-plugins": "*",
+    "@figma/plugin-typings": "*",
+    "@figma/widget-typings": "*",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "esbuild": "*",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.2"
   },
-  "bugs": {
-    "url": "https://github.com/yourusername/figma-signoff-widget/issues"
-  },
-  "homepage": "https://github.com/yourusername/figma-signoff-widget#readme",
-  "engines": {
-    "node": ">=14.0.0"
-  },
-  "figma": {
-    "id": "figma-signoff-widget",
-    "name": "Design Sign-Off Widget"
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:@figma/figma-plugins/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "project": "./widget-src/tsconfig.json"
+    },
+    "root": true,
+    "rules": {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrorsIgnorePattern": "^_"
+        }
+      ]
+    }
   }
 }
