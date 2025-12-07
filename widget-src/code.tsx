@@ -211,6 +211,8 @@ function CheckboxItem({ label, checked, onToggle }) {
       width="fill-parent"
       fill={checked ? colors["success-tonal"] : undefined}
       onClick={onToggle}
+      hoverStyle={{ opacity: 0.8 }}
+
     >
       <Text
         fontSize={14}
