@@ -400,10 +400,10 @@ function CheckboxWidget() {
       {
         itemType: "dropdown",
         options: [
-          { option: "review", label: "In-Review" },
-          { option: "ready-for-dev", label: "Ready for Dev" },
-          { option: "live", label: "Live" },
-          { option: "archived", label: "Archived" },
+          { option: "review", label: "🟠 In-Review" },
+          { option: "ready-for-dev", label: "🟢 Ready for Dev" },
+          { option: "live", label: "🔵 Live" },
+          { option: "archived", label: "🔴 Archived" },
         ],
         selectedOption: status,
         tooltip: "Status",
