@@ -51,43 +51,59 @@ function getCurrentDateTime(): string {
   return formatDateTime(new Date())
 }
 
-function DateRow({ label, date, onRefresh, showSeparator }) {
+function DateRow({ label, date, onRefresh, hasBorderBottom }) {
   return (
     <AutoLayout
+      name="timestamp-row"
       direction="vertical"
       verticalAlignItems="start"
-      spacing={4}
-      padding={{ top: 12, bottom: 12, left: 0, right: 0 }}
+      spacing={0}
+      padding={{ top: 12, bottom: hasBorderBottom ? 0 : 12, left: 0, right: 0 }}
+      width="fill-parent"
     >
-      <Text
-        fontSize={14}
-        fill="#000000"
-        fontWeight="bold"
-      >
-        {label}
-      </Text>
       <AutoLayout
         direction="horizontal"
         verticalAlignItems="center"
         spacing={8}
+        padding={{ top: 0, bottom: 12, left: 0, right: 0 }}
+        width="fill-parent"
       >
-        <Text
-          fontSize={14}
-          fill="#000000"
+        <AutoLayout
+          name="time-wrapper"
+          direction="vertical"
+          verticalAlignItems="start"
+          spacing={4}
+          width="fill-parent"
         >
-          {date}
-        </Text>
+          <Text
+            name="date-label"
+            fontSize={14}
+            fill={colors["content-1"]}
+            fontWeight="bold"
+            width="fill-parent"
+          >
+            {label}
+          </Text>
+          <Text
+            name="date-value"
+            fontSize={14}
+            fill={colors["content-2"]}
+            width="fill-parent"
+          >
+            {date}
+          </Text>
+        </AutoLayout>
         <SVG
+          name="refresh-button"
           src={refreshIconSrc}
           onClick={onRefresh}
         />
       </AutoLayout>
-      {showSeparator && (
-        <AutoLayout
-          direction="horizontal"
+      {hasBorderBottom && (
+        <Rectangle
           width="fill-parent"
           height={1}
-          fill="#E0E0E0"
+          fill={colors["border-1"]}
         />
       )}
     </AutoLayout>
@@ -404,24 +420,25 @@ function CheckboxWidget() {
     >
       <TitleSection status={status} photoUrl={currentUserPhotoUrl} userName={currentUserName} />
       <AutoLayout
-        name="Date Section"
+        name="timestamp-section"
         direction="vertical"
         verticalAlignItems="start"
         horizontalAlignItems="start"
         spacing={0}
         padding={0}
+        width="fill-parent"
       >
         <DateRow
           label="Finalization Date"
           date={finalizationDate}
           onRefresh={() => setFinalizationDate(getCurrentDateTime())}
-          showSeparator={false}
+          hasBorderBottom={true}
         />
         <DateRow
           label="Last Revision"
           date={lastRevision}
           onRefresh={() => setLastRevision(getCurrentDateTime())}
-          showSeparator={false}
+          hasBorderBottom={false}
         />
       </AutoLayout>
       <AutoLayout
