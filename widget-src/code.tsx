@@ -566,7 +566,7 @@ function CheckboxWidget() {
                 name="section-title"
                 fontSize={14}
                 fill={colors["content-1"]}
-                fontWeight="medium"
+                fontWeight="bold"
                 fontFamily="Vazirmatn"
                 horizontalAlignText="right"
                 width="fill-parent"
