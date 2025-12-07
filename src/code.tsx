@@ -10,6 +10,7 @@ const colors = {
   "content-3": "#A2A2A2",
   "link": "#1672DD",
   "border-1": "#ECEDEF",
+  "gray": "#BFC0C1",
   "error": "#EB3850",
   "info": "#3F69F2",
   "success": "#3DAA58",
@@ -18,6 +19,7 @@ const colors = {
   "warning-tonal": "#FEF0E3",
   "on-warning-tonal": "#934C0E",
   "on-error": "#FFFFFF",
+  "on-gray": "#FFFFFF",
   "on-info": "#FFFFFF",
   "on-success": "#FFFFFF",
   "on-warning": "#FFFFFF"
@@ -410,8 +412,12 @@ function CheckboxItem({ label, checked, onToggle }) {
   )
 }
 
-function TitleSection({ status, photoUrl, userName }: { status: Status; photoUrl: string | null; userName: string }) {
-  const config = statusConfig[status]
+function TitleSection({ status, photoUrl, userName, designerSignedOff }: { status: Status; photoUrl: string | null; userName: string; designerSignedOff: boolean }) {
+  const config = designerSignedOff ? statusConfig[status] : { label: "In-Progress", color: colors.gray, textColor: colors["on-gray"] }
+  const iconSrc = designerSignedOff 
+    ? getStatusIconSrc(status, config.textColor)
+    : getWipIconSrc(config.textColor).replace(/width="24" height="24"/, 'width="14" height="14"')
+  
   return (
     <AutoLayout
       name="header-section"
@@ -451,7 +457,7 @@ function TitleSection({ status, photoUrl, userName }: { status: Status; photoUrl
         spacing={6}
       >
         <SVG
-          src={getStatusIconSrc(status, config.textColor)}
+          src={iconSrc}
           width={14}
           height={14}
         />
@@ -582,7 +588,7 @@ function CheckboxWidget() {
       spacing={24}
       width={400}
     >
-      <TitleSection status={status} photoUrl={currentUserPhotoUrl} userName={currentUserName} />
+      <TitleSection status={status} photoUrl={currentUserPhotoUrl} userName={currentUserName} designerSignedOff={designerSignedOff} />
       <AutoLayout
         name="timestamp-section"
         direction="vertical"
