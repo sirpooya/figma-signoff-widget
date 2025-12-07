@@ -818,7 +818,7 @@ function CheckboxWidget() {
           letterSpacing={0.5}
           width="fill-parent"
         >
-          Design SignOff Widget by Pooya Kamel
+          Design SignOff Widget
         </Text>
       </AutoLayout>
     </AutoLayout>
