@@ -1,5 +1,14 @@
 const { widget } = figma
-const { AutoLayout, Text, SVG, useSyncedState } = widget
+const { AutoLayout, Text, SVG, useSyncedState, usePropertyMenu } = widget
+
+type Status = "review" | "ready-for-dev" | "live" | "archived"
+
+const statusConfig: { [key in Status]: { label: string; color: string; textColor: string } } = {
+  "review": { label: "Review", color: "#F2994A", textColor: "#FFFFFF" },
+  "ready-for-dev": { label: "Ready for Dev", color: "#27AE60", textColor: "#FFFFFF" },
+  "live": { label: "Live", color: "#2F80ED", textColor: "#FFFFFF" },
+  "archived": { label: "Archived", color: "#EB5757", textColor: "#FFFFFF" }
+}
 
 const refreshIconSrc = `
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -65,6 +74,56 @@ function DateRow({ label, date, onRefresh, showSeparator }) {
   )
 }
 
+function ApprovalRow({ role, approved, onToggle }) {
+  return (
+    <AutoLayout
+      direction="horizontal"
+      verticalAlignItems="center"
+      spacing={12}
+      padding={{ top: 8, bottom: 8, left: 0, right: 0 }}
+      width="fill-parent"
+    >
+      <AutoLayout
+        direction="vertical"
+        verticalAlignItems="start"
+        spacing={4}
+      >
+        <Text
+          fontSize={14}
+          fill="#000000"
+          fontWeight="bold"
+        >
+          {role}
+        </Text>
+        <Text
+          fontSize={12}
+          fill="#666666"
+        >
+          {"{Assignee}"}
+        </Text>
+      </AutoLayout>
+      <AutoLayout
+        direction="horizontal"
+        verticalAlignItems="center"
+        horizontalAlignItems="center"
+        padding={{ left: 12, right: 12, top: 6, bottom: 6 }}
+        fill={approved ? "#E8F5E9" : "#FFF3E0"}
+        cornerRadius={16}
+        spacing={6}
+        onClick={onToggle}
+      >
+        <Text
+          fontSize={12}
+          fill={approved ? "#2E7D32" : "#E65100"}
+          fontWeight="bold"
+        >
+          {approved ? "✅ Approved" : "🟠 In-Review"}
+        </Text>
+      </AutoLayout>
+    </AutoLayout>
+  )
+}
+
 function CheckboxItem({ label, checked, onToggle }) {
   return (
     <AutoLayout
@@ -72,8 +131,18 @@ function CheckboxItem({ label, checked, onToggle }) {
       verticalAlignItems="center"
       spacing={12}
       padding={{ top: 8, bottom: 8, left: 0, right: 0 }}
+      width="fill-parent"
       onClick={onToggle}
     >
+      <Text
+        fontSize={14}
+        fill="#000000"
+        fontFamily="Vazirmatn"
+        horizontalAlignText="right"
+        width="fill-parent"
+      >
+        {label}
+      </Text>
       <AutoLayout
         width={20}
         height={20}
@@ -96,60 +165,165 @@ function CheckboxItem({ label, checked, onToggle }) {
           </Text>
         )}
       </AutoLayout>
+    </AutoLayout>
+  )
+}
+
+function TitleSection({ status }: { status: Status }) {
+  const config = statusConfig[status]
+  return (
+    <AutoLayout
+      name="Title Section"
+      direction="horizontal"
+      verticalAlignItems="center"
+      spacing={12}
+      padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
+      width="fill-parent"
+    >
       <Text
-        fontSize={14}
+        fontSize={16}
         fill="#000000"
+        fontWeight="bold"
       >
-        {label}
+        Design Sign-Off
       </Text>
+      <AutoLayout
+        direction="horizontal"
+        verticalAlignItems="center"
+        horizontalAlignItems="center"
+        padding={{ left: 12, right: 12, top: 6, bottom: 6 }}
+        fill={config.color}
+        cornerRadius={8}
+        spacing={6}
+      >
+        <Text
+          fontSize={12}
+          fill={config.textColor}
+          fontWeight="bold"
+        >
+          {config.label}
+        </Text>
+      </AutoLayout>
     </AutoLayout>
   )
 }
 
 function CheckboxWidget() {
+  const [status, setStatus] = useSyncedState<Status>('status', 'review')
   const [finalizationDate, setFinalizationDate] = useSyncedState('finalizationDate', getCurrentDateTime())
   const [lastRevision, setLastRevision] = useSyncedState('lastRevision', getCurrentDateTime())
+  const [pmApproved, setPmApproved] = useSyncedState('pmApproved', false)
+  const [designLeadApproved, setDesignLeadApproved] = useSyncedState('designLeadApproved', false)
+  const [dsmApproved, setDsmApproved] = useSyncedState('dsmApproved', false)
   const [item1, setItem1] = useSyncedState('item1', false)
   const [item2, setItem2] = useSyncedState('item2', false)
   const [item3, setItem3] = useSyncedState('item3', false)
 
+  usePropertyMenu(
+    [
+      {
+        itemType: "dropdown",
+        options: [
+          { option: "review", label: "Review" },
+          { option: "ready-for-dev", label: "Ready for Dev" },
+          { option: "live", label: "Live" },
+          { option: "archived", label: "Archived" },
+        ],
+        selectedOption: status,
+        tooltip: "Status",
+        propertyName: "status",
+      },
+    ],
+    ({ propertyName, propertyValue }) => {
+      if (propertyName === "status" && propertyValue) {
+        setStatus(propertyValue as Status)
+      }
+    }
+  )
+
   return (
     <AutoLayout
+      name="Widget Root"
       direction="vertical"
       verticalAlignItems="start"
       padding={16}
       fill="#FFFFFF"
-      cornerRadius={8}
+      cornerRadius={0}
       spacing={12}
       width={400}
     >
-      <DateRow
-        label="Finalization Date"
-        date={finalizationDate}
-        onRefresh={() => setFinalizationDate(getCurrentDateTime())}
-        showSeparator={true}
-      />
-      <DateRow
-        label="Last Revision"
-        date={lastRevision}
-        onRefresh={() => setLastRevision(getCurrentDateTime())}
-        showSeparator={false}
-      />
-      <CheckboxItem
-        label="Item 1"
-        checked={item1}
-        onToggle={() => setItem1(!item1)}
-      />
-      <CheckboxItem
-        label="Item 2"
-        checked={item2}
-        onToggle={() => setItem2(!item2)}
-      />
-      <CheckboxItem
-        label="Item 3"
-        checked={item3}
-        onToggle={() => setItem3(!item3)}
-      />
+      <TitleSection status={status} />
+      <AutoLayout
+        name="Date Section"
+        direction="vertical"
+        verticalAlignItems="start"
+        horizontalAlignItems="start"
+        spacing={0}
+        padding={0}
+      >
+        <DateRow
+          label="Finalization Date"
+          date={finalizationDate}
+          onRefresh={() => setFinalizationDate(getCurrentDateTime())}
+          showSeparator={false}
+        />
+        <DateRow
+          label="Last Revision"
+          date={lastRevision}
+          onRefresh={() => setLastRevision(getCurrentDateTime())}
+          showSeparator={false}
+        />
+      </AutoLayout>
+      <AutoLayout
+        name="Approval Section"
+        direction="vertical"
+        verticalAlignItems="start"
+        horizontalAlignItems="start"
+        spacing={0}
+        padding={0}
+        width="fill-parent"
+      >
+        <ApprovalRow
+          role="PM"
+          approved={pmApproved}
+          onToggle={() => setPmApproved(!pmApproved)}
+        />
+        <ApprovalRow
+          role="Design Lead"
+          approved={designLeadApproved}
+          onToggle={() => setDesignLeadApproved(!designLeadApproved)}
+        />
+        <ApprovalRow
+          role="DSM"
+          approved={dsmApproved}
+          onToggle={() => setDsmApproved(!dsmApproved)}
+        />
+      </AutoLayout>
+      <AutoLayout
+        name="Checkbox Section"
+        direction="vertical"
+        verticalAlignItems="start"
+        horizontalAlignItems="end"
+        spacing={12}
+        padding={0}
+        width="fill-parent"
+      >
+        <CheckboxItem
+          label="از کامپوننت صحیح برای usecaseها استفاده شده باشد"
+          checked={item1}
+          onToggle={() => setItem1(!item1)}
+        />
+        <CheckboxItem
+          label="حالت خالی و لودینگ — بدون داده، استفاده برای اولین بار"
+          checked={item2}
+          onToggle={() => setItem2(!item2)}
+        />
+        <CheckboxItem
+          label="حالت افلاین — ویژگی‌های محدود، تلاش مجدد"
+          checked={item3}
+          onToggle={() => setItem3(!item3)}
+        />
+      </AutoLayout>
     </AutoLayout>
   )
 }
