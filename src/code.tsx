@@ -111,10 +111,11 @@ function getCurrentDateTime(): string {
   return formatDateTime(new Date())
 }
 
-function DateRow({ label, date, onRefresh, hasBorderBottom }) {
+function DateRow({ label, date, onRefresh, hasBorderBottom, photoUrl, userName, showRefreshButton = true }) {
+  const isSignoffRow = photoUrl !== undefined && userName !== undefined
   return (
     <AutoLayout
-      name="timestamp-row"
+      name={isSignoffRow ? "signoff-row" : "revision-row"}
       direction="horizontal"
       verticalAlignItems="center"
       spacing={12}
@@ -134,7 +135,7 @@ function DateRow({ label, date, onRefresh, hasBorderBottom }) {
         width="fill-parent"
       >
         <Text
-          name="date-label"
+          name="label"
           fontSize={14}
           fill={colors["content-1"]}
           fontWeight="medium"
@@ -142,21 +143,63 @@ function DateRow({ label, date, onRefresh, hasBorderBottom }) {
         >
           {label}
         </Text>
-        <Text
-          name="date-value"
-          fontSize={14}
-          fill={colors["content-2"]}
-          fontWeight="normal"
-          width="fill-parent"
-        >
-          {date}
-        </Text>
+        {isSignoffRow ? (
+          <AutoLayout
+            name="subtitle-wrapper"
+            direction="horizontal"
+            verticalAlignItems="center"
+            spacing={6}
+            padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
+            width="fill-parent"
+          >
+            {photoUrl ? (
+              <Image name="avatar" cornerRadius={12} width={16} height={16} src={String(photoUrl)} />
+            ) : (
+              <Rectangle name="avatar" cornerRadius={12} width={16} height={16} fill={colors["border-1"]} />
+            )}
+            <Text
+              name="name"
+              fontSize={14}
+              fontWeight="normal"
+              fill={colors["content-2"]}
+            >
+              {userName}
+            </Text>
+            <Text
+              fontSize={14}
+              fill={colors["content-3"]}
+              fontWeight="normal"
+            >
+              –
+            </Text>
+            <Text
+              name="timestamp"
+              fontSize={14}
+              fill={colors["content-3"]}
+              fontWeight="normal"
+            >
+              {date}
+            </Text>
+          </AutoLayout>
+        ) : (
+          <Text
+            name="timestamp"
+            fontSize={14}
+            fill={colors["content-3"]}
+            fontWeight="normal"
+            width="fill-parent"
+          >
+            {date}
+          </Text>
+        )}
       </AutoLayout>
-      <SVG
-        name="refresh-button"
-        src={getRefreshIconSrc(colors.link)}
-        onClick={onRefresh}
-      />
+      {showRefreshButton && (
+        <SVG
+          name="refresh-button"
+          src={getRefreshIconSrc(colors.link)}
+          onClick={onRefresh}
+        />
+      )}
     </AutoLayout>
   )
 }
@@ -356,29 +399,6 @@ function TitleSection({ status, photoUrl, userName }: { status: Status; photoUrl
         >
           Design Sign-Off
         </Text>
-        <AutoLayout
-          name="subtitle-wrapper"
-          direction="horizontal"
-          verticalAlignItems="center"
-          spacing={6}
-          padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
-          width="fill-parent"
-        >
-          {photoUrl ? (
-            <Image name="avatar" cornerRadius={12} width={16} height={16} src={String(photoUrl)} />
-          ) : (
-            <Rectangle name="avatar" cornerRadius={12} width={16} height={16} fill={colors["border-1"]} />
-          )}
-          <Text
-            name="subtitle"
-            fontSize={14}
-            fontWeight="normal"
-            fill={colors["content-2"]}
-            width="fill-parent"
-          >
-            {userName}
-          </Text>
-        </AutoLayout>
       </AutoLayout>
       <AutoLayout
         name="status-badge"
@@ -538,10 +558,13 @@ function CheckboxWidget() {
         cornerRadius={8}
       >
         <DateRow
-          label="Finalization Date"
+          label="Designer"
           date={finalizationDate}
           onRefresh={() => setFinalizationDate(getCurrentDateTime())}
           hasBorderBottom={true}
+          photoUrl={currentUserPhotoUrl}
+          userName={currentUserName}
+          showRefreshButton={false}
         />
         <DateRow
           label="Last Revision"
