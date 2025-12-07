@@ -8,6 +8,7 @@ function CheckboxItem({ label, checked, onToggle }) {
       verticalAlignItems="center"
       spacing={12}
       padding={{ top: 8, bottom: 8, left: 0, right: 0 }}
+      onClick={onToggle}
     >
       <AutoLayout
         width={20}
@@ -21,7 +22,6 @@ function CheckboxItem({ label, checked, onToggle }) {
           color: checked ? "#6366F1" : "#000000"
         }}
         strokeWidth={2}
-        onClick={onToggle}
       >
         {checked && (
           <Text
