@@ -1,6 +1,8 @@
 const { widget } = figma
 const { AutoLayout, Text, SVG, Image, Rectangle, useSyncedState, usePropertyMenu, useEffect } = widget
 
+import * as checklistData from './checklist.json'
+
 type Status = "review" | "ready-for-dev" | "live" | "archived"
 
 const statusConfig: { [key in Status]: { label: string; color: string; textColor: string } } = {
@@ -255,9 +257,14 @@ function CheckboxWidget() {
   const [dsmAssignee, setDsmAssignee] = useSyncedState<string | null>('dsmAssignee', null)
   const [dsmPhotoUrl, setDsmPhotoUrl] = useSyncedState<string | null>('dsmPhotoUrl', null)
   const [showChecklist, setShowChecklist] = useSyncedState('showChecklist', true)
-  const [item1, setItem1] = useSyncedState('item1', false)
-  const [item2, setItem2] = useSyncedState('item2', false)
-  const [item3, setItem3] = useSyncedState('item3', false)
+  // Initialize checklist items state from JSON
+  const [checklistItems, setChecklistItems] = useSyncedState<{ [key: number]: boolean }>(
+    'checklistItems',
+    checklistData.items.reduce((acc, _, index) => {
+      acc[index] = false
+      return acc
+    }, {} as { [key: number]: boolean })
+  )
 
   // Capture usernames and avatars when items are approved
   useEffect(() => {
@@ -396,21 +403,19 @@ function CheckboxWidget() {
           padding={0}
           width="fill-parent"
         >
-          <CheckboxItem
-            label="از کامپوننت صحیح برای usecaseها استفاده شده باشد"
-            checked={item1}
-            onToggle={() => setItem1(!item1)}
-          />
-          <CheckboxItem
-            label="حالت خالی و لودینگ — بدون داده، استفاده برای اولین بار"
-            checked={item2}
-            onToggle={() => setItem2(!item2)}
-          />
-          <CheckboxItem
-            label="حالت افلاین — ویژگی‌های محدود، تلاش مجدد"
-            checked={item3}
-            onToggle={() => setItem3(!item3)}
-          />
+          {checklistData.items.map((label, index) => (
+            <CheckboxItem
+              key={index}
+              label={label}
+              checked={checklistItems[index] || false}
+              onToggle={() => {
+                setChecklistItems({
+                  ...checklistItems,
+                  [index]: !checklistItems[index]
+                })
+              }}
+            />
+          ))}
         </AutoLayout>
       )}
     </AutoLayout>
