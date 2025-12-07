@@ -103,7 +103,7 @@ function ApprovalRow({ role, approved, assignee, photoUrl, onToggle }) {
             verticalAlignItems="center"
             spacing={6}
           >
-            {photoUrl && photoUrl.trim() !== "" ? (
+            {photoUrl ? (
               <Image
                 cornerRadius={12}
                 width={24}
@@ -115,9 +115,7 @@ function ApprovalRow({ role, approved, assignee, photoUrl, onToggle }) {
                 cornerRadius={12}
                 width={24}
                 height={24}
-                fill="#E0E0E0"
-                stroke="#CCCCCC"
-                strokeWidth={1}
+                fill="#2A2A2A"
               />
             )}
             <Text
@@ -204,39 +202,66 @@ function CheckboxItem({ label, checked, onToggle }) {
   )
 }
 
-function TitleSection({ status }: { status: Status }) {
+function TitleSection({ status, photoUrl, userName }: { status: Status; photoUrl: string | null; userName: string }) {
   const config = statusConfig[status]
   return (
     <AutoLayout
       name="Title Section"
-      direction="horizontal"
-      verticalAlignItems="center"
-      spacing={12}
+      direction="vertical"
+      verticalAlignItems="start"
+      spacing={8}
       padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
       width="fill-parent"
     >
-      <Text
-        fontSize={16}
-        fill="#000000"
-        fontWeight="bold"
-      >
-        Design Sign-Off
-      </Text>
       <AutoLayout
         direction="horizontal"
         verticalAlignItems="center"
-        horizontalAlignItems="center"
-        padding={{ left: 12, right: 12, top: 6, bottom: 6 }}
-        fill={config.color}
-        cornerRadius={8}
-        spacing={6}
+        spacing={12}
+        padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
+        width="fill-parent"
       >
         <Text
-          fontSize={12}
-          fill={config.textColor}
+          fontSize={16}
+          fill="#000000"
           fontWeight="bold"
         >
-          {config.label}
+          Design Sign-Off
+        </Text>
+        <AutoLayout
+          direction="horizontal"
+          verticalAlignItems="center"
+          horizontalAlignItems="center"
+          padding={{ left: 12, right: 12, top: 6, bottom: 6 }}
+          fill={config.color}
+          cornerRadius={8}
+          spacing={6}
+        >
+          <Text
+            fontSize={12}
+            fill={config.textColor}
+            fontWeight="bold"
+          >
+            {config.label}
+          </Text>
+        </AutoLayout>
+      </AutoLayout>
+      <AutoLayout
+        direction="horizontal"
+        verticalAlignItems="center"
+        spacing={8}
+        padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
+      >
+        {photoUrl ? (
+          <Image cornerRadius={12} width={24} height={24} src={String(photoUrl)} />
+        ) : (
+          <Rectangle cornerRadius={12} width={24} height={24} fill="#2A2A2A" />
+        )}
+        <Text
+          fontSize={14}
+          fill="#000000"
+          fontWeight="medium"
+        >
+          {userName}
         </Text>
       </AutoLayout>
     </AutoLayout>
@@ -257,6 +282,9 @@ function CheckboxWidget() {
   const [dsmAssignee, setDsmAssignee] = useSyncedState<string | null>('dsmAssignee', null)
   const [dsmPhotoUrl, setDsmPhotoUrl] = useSyncedState<string | null>('dsmPhotoUrl', null)
   const [showChecklist, setShowChecklist] = useSyncedState('showChecklist', true)
+  // Current user info for avatar display
+  const [currentUserName, setCurrentUserName] = useSyncedState<string>('currentUserName', "")
+  const [currentUserPhotoUrl, setCurrentUserPhotoUrl] = useSyncedState<string | null>('currentUserPhotoUrl', null)
   // Initialize checklist items state from JSON
   const [checklistItems, setChecklistItems] = useSyncedState<{ [key: number]: boolean }>(
     'checklistItems',
@@ -265,6 +293,18 @@ function CheckboxWidget() {
       return acc
     }, {} as { [key: number]: boolean })
   )
+
+  // Capture current user info when widget loads (EXACTLY matching WidgetUserBadge pattern)
+  useEffect(() => {
+    if (!currentUserName) {
+      if (figma.currentUser) {
+        setCurrentUserName(figma.currentUser.name)
+        setCurrentUserPhotoUrl(figma.currentUser.photoUrl)
+      } else {
+        figma.notify("Please login to Figma")
+      }
+    }
+  })
 
   // Capture usernames and avatars when items are approved
   useEffect(() => {
@@ -334,7 +374,7 @@ function CheckboxWidget() {
       spacing={12}
       width={400}
     >
-      <TitleSection status={status} />
+      <TitleSection status={status} photoUrl={currentUserPhotoUrl} userName={currentUserName} />
       <AutoLayout
         name="Date Section"
         direction="vertical"
