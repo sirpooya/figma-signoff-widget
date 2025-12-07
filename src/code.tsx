@@ -39,8 +39,8 @@ const getRefreshIconSrc = (color: string) => `
 
 function formatDateTime(date: Date): string {
   const year = date.getFullYear()
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                      'July', 'August', 'September', 'October', 'November', 'December']
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                      'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
   const month = monthNames[date.getMonth()]
   const day = String(date.getDate()).padStart(2, '0')
   const hours = String(date.getHours()).padStart(2, '0')
@@ -593,6 +593,15 @@ function CheckboxWidget() {
           ))}
         </AutoLayout>
       )}
+      <Text
+        fontSize={10}
+        fill={colors["content-2"]}
+        fontWeight="light"
+        letterSpacing={0.5}
+        width="fill-parent"
+      >
+        © Pooya Kamel – Licensed under GPLv3
+      </Text>
     </AutoLayout>
   )
 }

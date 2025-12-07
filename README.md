@@ -78,7 +78,7 @@ A Figma widget for managing design sign-off processes with approval tracking, da
 
 ```
 figma-signoff-widget/
-├── widget-src/
+├── src/
 │   ├── code.tsx          # Main widget source code
 │   └── tsconfig.json     # TypeScript configuration
 ├── dist/
@@ -98,7 +98,7 @@ figma-signoff-widget/
 
 ### Development Workflow
 
-1. Make changes to `widget-src/code.tsx`
+1. Make changes to `src/code.tsx`
 2. Run `npm run build` (or use watch mode with `npm run dev`)
 3. In Figma, the widget will automatically reload when you make changes
 4. If the widget doesn't reload, remove and re-add it to the canvas
