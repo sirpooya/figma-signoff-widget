@@ -1,5 +1,5 @@
 const { widget } = figma
-const { AutoLayout, Text, SVG, useSyncedState, usePropertyMenu, useEffect } = widget
+const { AutoLayout, Text, SVG, Image, Rectangle, useSyncedState, usePropertyMenu, useEffect } = widget
 
 type Status = "review" | "ready-for-dev" | "live" | "archived"
 
@@ -74,7 +74,7 @@ function DateRow({ label, date, onRefresh, showSeparator }) {
   )
 }
 
-function ApprovalRow({ role, approved, assignee, onToggle }) {
+function ApprovalRow({ role, approved, assignee, photoUrl, onToggle }) {
   return (
     <AutoLayout
       direction="horizontal"
@@ -95,12 +95,44 @@ function ApprovalRow({ role, approved, assignee, onToggle }) {
         >
           {role}
         </Text>
-        <Text
-          fontSize={12}
-          fill="#666666"
-        >
-          {assignee || "{Assignee}"}
-        </Text>
+        {assignee ? (
+          <AutoLayout
+            direction="horizontal"
+            verticalAlignItems="center"
+            spacing={6}
+          >
+            {photoUrl && photoUrl.trim() !== "" ? (
+              <Image
+                cornerRadius={12}
+                width={24}
+                height={24}
+                src={photoUrl}
+              />
+            ) : (
+              <Rectangle
+                cornerRadius={12}
+                width={24}
+                height={24}
+                fill="#E0E0E0"
+                stroke="#CCCCCC"
+                strokeWidth={1}
+              />
+            )}
+            <Text
+              fontSize={12}
+              fill="#666666"
+            >
+              {assignee}
+            </Text>
+          </AutoLayout>
+        ) : (
+          <Text
+            fontSize={12}
+            fill="#666666"
+          >
+            {"{Assignee}"}
+          </Text>
+        )}
       </AutoLayout>
       <AutoLayout
         direction="horizontal"
@@ -215,19 +247,24 @@ function CheckboxWidget() {
   const [lastRevision, setLastRevision] = useSyncedState('lastRevision', getCurrentDateTime())
   const [pmApproved, setPmApproved] = useSyncedState('pmApproved', false)
   const [pmAssignee, setPmAssignee] = useSyncedState<string | null>('pmAssignee', null)
+  const [pmPhotoUrl, setPmPhotoUrl] = useSyncedState<string | null>('pmPhotoUrl', null)
   const [designLeadApproved, setDesignLeadApproved] = useSyncedState('designLeadApproved', false)
   const [designLeadAssignee, setDesignLeadAssignee] = useSyncedState<string | null>('designLeadAssignee', null)
+  const [designLeadPhotoUrl, setDesignLeadPhotoUrl] = useSyncedState<string | null>('designLeadPhotoUrl', null)
   const [dsmApproved, setDsmApproved] = useSyncedState('dsmApproved', false)
   const [dsmAssignee, setDsmAssignee] = useSyncedState<string | null>('dsmAssignee', null)
+  const [dsmPhotoUrl, setDsmPhotoUrl] = useSyncedState<string | null>('dsmPhotoUrl', null)
+  const [showChecklist, setShowChecklist] = useSyncedState('showChecklist', true)
   const [item1, setItem1] = useSyncedState('item1', false)
   const [item2, setItem2] = useSyncedState('item2', false)
   const [item3, setItem3] = useSyncedState('item3', false)
 
-  // Capture usernames when items are approved
+  // Capture usernames and avatars when items are approved
   useEffect(() => {
     if (pmApproved && !pmAssignee) {
       if (figma.currentUser) {
         setPmAssignee(figma.currentUser.name)
+        setPmPhotoUrl(figma.currentUser.photoUrl)
       }
     }
   })
@@ -236,6 +273,7 @@ function CheckboxWidget() {
     if (designLeadApproved && !designLeadAssignee) {
       if (figma.currentUser) {
         setDesignLeadAssignee(figma.currentUser.name)
+        setDesignLeadPhotoUrl(figma.currentUser.photoUrl)
       }
     }
   })
@@ -244,6 +282,7 @@ function CheckboxWidget() {
     if (dsmApproved && !dsmAssignee) {
       if (figma.currentUser) {
         setDsmAssignee(figma.currentUser.name)
+        setDsmPhotoUrl(figma.currentUser.photoUrl)
       }
     }
   })
@@ -262,10 +301,17 @@ function CheckboxWidget() {
         tooltip: "Status",
         propertyName: "status",
       },
+      {
+        itemType: "action",
+        tooltip: "Toggle Checklist",
+        propertyName: "toggleChecklist",
+      },
     ],
     ({ propertyName, propertyValue }) => {
       if (propertyName === "status" && propertyValue) {
         setStatus(propertyValue as Status)
+      } else if (propertyName === "toggleChecklist") {
+        setShowChecklist(!showChecklist)
       }
     }
   )
@@ -316,6 +362,7 @@ function CheckboxWidget() {
           role="PM"
           approved={pmApproved}
           assignee={pmAssignee}
+          photoUrl={pmPhotoUrl}
           onToggle={() => {
             setPmApproved(!pmApproved)
           }}
@@ -324,6 +371,7 @@ function CheckboxWidget() {
           role="Design Lead"
           approved={designLeadApproved}
           assignee={designLeadAssignee}
+          photoUrl={designLeadPhotoUrl}
           onToggle={() => {
             setDesignLeadApproved(!designLeadApproved)
           }}
@@ -332,36 +380,39 @@ function CheckboxWidget() {
           role="DSM"
           approved={dsmApproved}
           assignee={dsmAssignee}
+          photoUrl={dsmPhotoUrl}
           onToggle={() => {
             setDsmApproved(!dsmApproved)
           }}
         />
       </AutoLayout>
-      <AutoLayout
-        name="Checkbox Section"
-        direction="vertical"
-        verticalAlignItems="start"
-        horizontalAlignItems="end"
-        spacing={12}
-        padding={0}
-        width="fill-parent"
-      >
-        <CheckboxItem
-          label="از کامپوننت صحیح برای usecaseها استفاده شده باشد"
-          checked={item1}
-          onToggle={() => setItem1(!item1)}
-        />
-        <CheckboxItem
-          label="حالت خالی و لودینگ — بدون داده، استفاده برای اولین بار"
-          checked={item2}
-          onToggle={() => setItem2(!item2)}
-        />
-        <CheckboxItem
-          label="حالت افلاین — ویژگی‌های محدود، تلاش مجدد"
-          checked={item3}
-          onToggle={() => setItem3(!item3)}
-        />
-      </AutoLayout>
+      {showChecklist && (
+        <AutoLayout
+          name="Checkbox Section"
+          direction="vertical"
+          verticalAlignItems="start"
+          horizontalAlignItems="end"
+          spacing={12}
+          padding={0}
+          width="fill-parent"
+        >
+          <CheckboxItem
+            label="از کامپوننت صحیح برای usecaseها استفاده شده باشد"
+            checked={item1}
+            onToggle={() => setItem1(!item1)}
+          />
+          <CheckboxItem
+            label="حالت خالی و لودینگ — بدون داده، استفاده برای اولین بار"
+            checked={item2}
+            onToggle={() => setItem2(!item2)}
+          />
+          <CheckboxItem
+            label="حالت افلاین — ویژگی‌های محدود، تلاش مجدد"
+            checked={item3}
+            onToggle={() => setItem3(!item3)}
+          />
+        </AutoLayout>
+      )}
     </AutoLayout>
   )
 }
