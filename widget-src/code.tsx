@@ -13,7 +13,7 @@ const colors = {
   "info": "#3F69F2",
   "success": "#3DAA58",
   "warning": "#F57F17",
-  "warning-tonal": "rgba(245, 127, 23, 0.12)",
+  "warning-tonal": "#FEF0E3",
   "on-warning-tonal": "#934C0E",
   "on-error": "#FFFFFF",
   "on-info": "#FFFFFF",
@@ -24,15 +24,15 @@ const colors = {
 type Status = "review" | "ready-for-dev" | "live" | "archived"
 
 const statusConfig: { [key in Status]: { label: string; color: string; textColor: string } } = {
-  "review": { label: "Review", color: colors.warning, textColor: colors["on-warning"] },
+  "review": { label: "In-Review", color: colors.warning, textColor: colors["on-warning"] },
   "ready-for-dev": { label: "Ready for Dev", color: colors.success, textColor: colors["on-success"] },
   "live": { label: "Live", color: colors.info, textColor: colors["on-info"] },
   "archived": { label: "Archived", color: colors.error, textColor: colors["on-error"] }
 }
 
-const refreshIconSrc = `
+const getRefreshIconSrc = (color: string) => `
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-<path d="M18.58 10.311c0.293-0.292 0.768-0.292 1.061 0.001l2.589 2.602c0.292 0.294 0.291 0.768-0.003 1.061s-0.768 0.291-1.061-0.002l-1.33-1.337c-0.323 4.039-3.701 7.217-7.823 7.217-2.516-0-4.755-1.185-6.19-3.024-0.255-0.326-0.197-0.798 0.129-1.053s0.798-0.197 1.053 0.13c1.163 1.49 2.975 2.446 5.009 2.446 3.278 0 5.976-2.484 6.315-5.673l-1.304 1.298c-0.294 0.292-0.769 0.291-1.062-0.003s-0.29-0.768 0.003-1.061l2.615-2.603zM12.013 4.151c2.696 0 5.074 1.36 6.486 3.427 0.233 0.342 0.146 0.808-0.196 1.042s-0.808 0.146-1.042-0.196c-1.145-1.675-3.069-2.772-5.248-2.772-3.364 0-6.115 2.616-6.334 5.925l1.301-1.31c0.292-0.294 0.767-0.295 1.061-0.003s0.296 0.766 0.004 1.059l-2.6 2.622c-0.292 0.294-0.768 0.295-1.062 0.004l-2.606-2.586c-0.294-0.292-0.296-0.768-0.004-1.062s0.767-0.296 1.061-0.004l1.34 1.329c0.195-4.161 3.63-7.475 7.84-7.476z"></path>
+<path fill="${color}" d="M18.58 10.311c0.293-0.292 0.768-0.292 1.061 0.001l2.589 2.602c0.292 0.294 0.291 0.768-0.003 1.061s-0.768 0.291-1.061-0.002l-1.33-1.337c-0.323 4.039-3.701 7.217-7.823 7.217-2.516-0-4.755-1.185-6.19-3.024-0.255-0.326-0.197-0.798 0.129-1.053s0.798-0.197 1.053 0.13c1.163 1.49 2.975 2.446 5.009 2.446 3.278 0 5.976-2.484 6.315-5.673l-1.304 1.298c-0.294 0.292-0.769 0.291-1.062-0.003s-0.29-0.768 0.003-1.061l2.615-2.603zM12.013 4.151c2.696 0 5.074 1.36 6.486 3.427 0.233 0.342 0.146 0.808-0.196 1.042s-0.808 0.146-1.042-0.196c-1.145-1.675-3.069-2.772-5.248-2.772-3.364 0-6.115 2.616-6.334 5.925l1.301-1.31c0.292-0.294 0.767-0.295 1.061-0.003s0.296 0.766 0.004 1.059l-2.6 2.622c-0.292 0.294-0.768 0.295-1.062 0.004l-2.606-2.586c-0.294-0.292-0.296-0.768-0.004-1.062s0.767-0.296 1.061-0.004l1.34 1.329c0.195-4.161 3.63-7.475 7.84-7.476z"></path>
 </svg>
 `
 
@@ -55,136 +55,144 @@ function DateRow({ label, date, onRefresh, hasBorderBottom }) {
   return (
     <AutoLayout
       name="timestamp-row"
-      direction="vertical"
-      verticalAlignItems="start"
-      spacing={0}
-      padding={{ top: 12, bottom: hasBorderBottom ? 0 : 12, left: 0, right: 0 }}
+      direction="horizontal"
+      verticalAlignItems="center"
+      spacing={12}
+      padding={16}
       width="fill-parent"
+      stroke={hasBorderBottom ? {
+        type: "solid",
+        color: colors["border-1"]
+      } : undefined}
+      strokeWidth={hasBorderBottom ? 1 : undefined}
     >
       <AutoLayout
-        direction="horizontal"
-        verticalAlignItems="center"
-        spacing={8}
-        padding={{ top: 0, bottom: 12, left: 0, right: 0 }}
+        name="time-wrapper"
+        direction="vertical"
+        verticalAlignItems="start"
+        spacing={4}
         width="fill-parent"
       >
-        <AutoLayout
-          name="time-wrapper"
-          direction="vertical"
-          verticalAlignItems="start"
-          spacing={4}
+        <Text
+          name="date-label"
+          fontSize={14}
+          fill={colors["content-1"]}
+          fontWeight="medium"
           width="fill-parent"
         >
-          <Text
-            name="date-label"
-            fontSize={14}
-            fill={colors["content-1"]}
-            fontWeight="bold"
-            width="fill-parent"
-          >
-            {label}
-          </Text>
-          <Text
-            name="date-value"
-            fontSize={14}
-            fill={colors["content-2"]}
-            width="fill-parent"
-          >
-            {date}
-          </Text>
-        </AutoLayout>
-        <SVG
-          name="refresh-button"
-          src={refreshIconSrc}
-          onClick={onRefresh}
-        />
-      </AutoLayout>
-      {hasBorderBottom && (
-        <Rectangle
+          {label}
+        </Text>
+        <Text
+          name="date-value"
+          fontSize={14}
+          fill={colors["content-2"]}
+          fontWeight="normal"
           width="fill-parent"
-          height={1}
-          fill={colors["border-1"]}
-        />
-      )}
+        >
+          {date}
+        </Text>
+      </AutoLayout>
+      <SVG
+        name="refresh-button"
+        src={getRefreshIconSrc(colors.link)}
+        onClick={onRefresh}
+      />
     </AutoLayout>
   )
 }
 
-function ApprovalRow({ role, approved, assignee, photoUrl, onToggle }) {
+function ApprovalRow({ role, approved, assignee, photoUrl, onToggle, hasBorderBottom }) {
+  const config = approved 
+    ? { label: "Approved", color: colors.success, textColor: colors["on-success"] }
+    : { label: "In-Review", color: colors["warning-tonal"], textColor: colors["on-warning-tonal"] }
+  
   return (
     <AutoLayout
+      name="approval-row"
       direction="horizontal"
       verticalAlignItems="center"
       spacing={12}
-      padding={{ top: 8, bottom: 8, left: 0, right: 0 }}
+      padding={16}
       width="fill-parent"
+      stroke={hasBorderBottom ? {
+        type: "solid",
+        color: colors["border-1"]
+      } : undefined}
+      strokeWidth={hasBorderBottom ? 1 : undefined}
+      strokeAlign="center"
     >
       <AutoLayout
+        name="approval-wrapper"
         direction="vertical"
         verticalAlignItems="start"
         spacing={4}
+        width="fill-parent"
       >
         <Text
+          name="role"
           fontSize={14}
-          fill="#000000"
-          fontWeight="bold"
+          fill={colors["content-1"]}
+          fontWeight="medium"
+          width="fill-parent"
         >
           {role}
         </Text>
-        {assignee ? (
-          <AutoLayout
-            direction="horizontal"
-            verticalAlignItems="center"
-            spacing={6}
-          >
-            {photoUrl ? (
-              <Image
-                cornerRadius={12}
-                width={24}
-                height={24}
-                src={photoUrl}
-              />
-            ) : (
-              <Rectangle
-                cornerRadius={12}
-                width={24}
-                height={24}
-                fill="#2A2A2A"
-              />
-            )}
-            <Text
-              fontSize={12}
-              fill="#666666"
-            >
-              {assignee}
-            </Text>
-          </AutoLayout>
-        ) : (
+        <AutoLayout
+          name="assignee-wrapper"
+          direction="horizontal"
+          verticalAlignItems="center"
+          spacing={8}
+          padding={0}
+          width="fill-parent"
+        >
+          {photoUrl ? (
+            <Image
+              name="avatar"
+              cornerRadius={12}
+              width={16}
+              height={16}
+              src={photoUrl}
+            />
+          ) : (
+            <Rectangle
+              name="avatar"
+              cornerRadius={12}
+              width={16}
+              height={16}
+              fill={colors["border-1"]}
+            />
+          )}
           <Text
-            fontSize={12}
-            fill="#666666"
+            name="assignee"
+            fontSize={14}
+            fill={colors["content-2"]}
+            fontWeight="normal"
+            width="fill-parent"
           >
-            {"{Assignee}"}
+            {assignee || "{Assignee}"}
           </Text>
-        )}
+        </AutoLayout>
       </AutoLayout>
       <AutoLayout
+        name="status-badge"
         direction="horizontal"
         verticalAlignItems="center"
         horizontalAlignItems="center"
         padding={{ left: 12, right: 12, top: 6, bottom: 6 }}
-        fill={approved ? "#E8F5E9" : "#FFF3E0"}
-        cornerRadius={16}
+        fill={config.color}
+        cornerRadius={8}
         spacing={6}
         onClick={onToggle}
         hoverStyle={{ opacity: 0.8 }}
       >
         <Text
+          fontFamily="Inter"
           fontSize={12}
-          fill={approved ? "#2E7D32" : "#E65100"}
-          fontWeight="bold"
+          fill={config.textColor}
+          fontWeight="medium"
+          letterSpacing={2}
         >
-          {approved ? "✅ Approved" : "🟠 In-Review"}
+          {config.label.toUpperCase()}
         </Text>
       </AutoLayout>
     </AutoLayout>
@@ -240,7 +248,7 @@ function TitleSection({ status, photoUrl, userName }: { status: Status; photoUrl
   const config = statusConfig[status]
   return (
     <AutoLayout
-      name="header-wrapper"
+      name="header-section"
       direction="horizontal"
       verticalAlignItems="center"
       horizontalAlignItems="start"
@@ -249,7 +257,7 @@ function TitleSection({ status, photoUrl, userName }: { status: Status; photoUrl
       width="fill-parent"
     >
       <AutoLayout
-        name="title-section"
+        name="title-wrapper"
         direction="vertical"
         verticalAlignItems="start"
         spacing={8}
@@ -274,13 +282,14 @@ function TitleSection({ status, photoUrl, userName }: { status: Status; photoUrl
           width="fill-parent"
         >
           {photoUrl ? (
-            <Image name="avatar" cornerRadius={12} width={24} height={24} src={String(photoUrl)} />
+            <Image name="avatar" cornerRadius={12} width={16} height={16} src={String(photoUrl)} />
           ) : (
-            <Rectangle name="avatar" cornerRadius={12} width={24} height={24} fill={colors["content-1"]} />
+            <Rectangle name="avatar" cornerRadius={12} width={16} height={16} fill={colors["border-1"]} />
           )}
           <Text
             name="subtitle"
             fontSize={14}
+            fontWeight="normal"
             fill={colors["content-2"]}
             width="fill-parent"
           >
@@ -383,7 +392,7 @@ function CheckboxWidget() {
       {
         itemType: "dropdown",
         options: [
-          { option: "review", label: "Review" },
+          { option: "review", label: "In-Review" },
           { option: "ready-for-dev", label: "Ready for Dev" },
           { option: "live", label: "Live" },
           { option: "archived", label: "Archived" },
@@ -427,6 +436,12 @@ function CheckboxWidget() {
         spacing={0}
         padding={0}
         width="fill-parent"
+        stroke={{
+          type: "solid",
+          color: colors["border-1"]
+        }}
+        strokeWidth={1}
+        cornerRadius={8}
       >
         <DateRow
           label="Finalization Date"
@@ -442,13 +457,19 @@ function CheckboxWidget() {
         />
       </AutoLayout>
       <AutoLayout
-        name="Approval Section"
+        name="approvals-section"
         direction="vertical"
         verticalAlignItems="start"
         horizontalAlignItems="start"
         spacing={0}
         padding={0}
         width="fill-parent"
+        stroke={{
+          type: "solid",
+          color: colors["border-1"]
+        }}
+        strokeWidth={1}
+        cornerRadius={8}
       >
         <ApprovalRow
           role="PM"
@@ -456,8 +477,16 @@ function CheckboxWidget() {
           assignee={pmAssignee}
           photoUrl={pmPhotoUrl}
           onToggle={() => {
-            setPmApproved(!pmApproved)
+            if (pmApproved) {
+              // Toggling from Approved to In-Review - reset assignee and avatar
+              setPmApproved(false)
+              setPmAssignee(null)
+              setPmPhotoUrl(null)
+            } else {
+              setPmApproved(true)
+            }
           }}
+          hasBorderBottom={true}
         />
         <ApprovalRow
           role="Design Lead"
@@ -465,8 +494,16 @@ function CheckboxWidget() {
           assignee={designLeadAssignee}
           photoUrl={designLeadPhotoUrl}
           onToggle={() => {
-            setDesignLeadApproved(!designLeadApproved)
+            if (designLeadApproved) {
+              // Toggling from Approved to In-Review - reset assignee and avatar
+              setDesignLeadApproved(false)
+              setDesignLeadAssignee(null)
+              setDesignLeadPhotoUrl(null)
+            } else {
+              setDesignLeadApproved(true)
+            }
           }}
+          hasBorderBottom={true}
         />
         <ApprovalRow
           role="DSM"
@@ -474,8 +511,16 @@ function CheckboxWidget() {
           assignee={dsmAssignee}
           photoUrl={dsmPhotoUrl}
           onToggle={() => {
-            setDsmApproved(!dsmApproved)
+            if (dsmApproved) {
+              // Toggling from Approved to In-Review - reset assignee and avatar
+              setDsmApproved(false)
+              setDsmAssignee(null)
+              setDsmPhotoUrl(null)
+            } else {
+              setDsmApproved(true)
+            }
           }}
+          hasBorderBottom={false}
         />
       </AutoLayout>
       {showChecklist && (
