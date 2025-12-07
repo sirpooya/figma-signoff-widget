@@ -339,12 +339,15 @@ function CheckboxWidget() {
   const [currentUserName, setCurrentUserName] = useSyncedState<string>('currentUserName', "")
   const [currentUserPhotoUrl, setCurrentUserPhotoUrl] = useSyncedState<string | null>('currentUserPhotoUrl', null)
   // Initialize checklist items state from JSON
-  const [checklistItems, setChecklistItems] = useSyncedState<{ [key: number]: boolean }>(
+  const [checklistItems, setChecklistItems] = useSyncedState<{ [key: string]: boolean }>(
     'checklistItems',
-    checklistData.items.reduce((acc, _, index) => {
-      acc[index] = false
+    checklistData.sections.reduce((acc, section, sectionIndex) => {
+      section.items.forEach((_, itemIndex) => {
+        const key = `${sectionIndex}-${itemIndex}`
+        acc[key] = false
+      })
       return acc
-    }, {} as { [key: number]: boolean })
+    }, {} as { [key: string]: boolean })
   )
 
   // Capture current user info when widget loads (EXACTLY matching WidgetUserBadge pattern)
@@ -525,7 +528,7 @@ function CheckboxWidget() {
       </AutoLayout>
       {showChecklist && (
         <AutoLayout
-          name="Checkbox Section"
+          name="checklist-section"
           direction="vertical"
           verticalAlignItems="start"
           horizontalAlignItems="end"
@@ -533,18 +536,45 @@ function CheckboxWidget() {
           padding={0}
           width="fill-parent"
         >
-          {checklistData.items.map((label, index) => (
-            <CheckboxItem
-              key={index}
-              label={label}
-              checked={checklistItems[index] || false}
-              onToggle={() => {
-                setChecklistItems({
-                  ...checklistItems,
-                  [index]: !checklistItems[index]
-                })
-              }}
-            />
+          {checklistData.sections.map((section, sectionIndex) => (
+            <AutoLayout
+              key={sectionIndex}
+              name="checklist-group"
+              direction="vertical"
+              verticalAlignItems="start"
+              horizontalAlignItems="end"
+              spacing={8}
+              padding={0}
+              width="fill-parent"
+            >
+              <Text
+                name="section-title"
+                fontSize={14}
+                fill={colors["content-1"]}
+                fontWeight="medium"
+                fontFamily="Vazirmatn"
+                horizontalAlignText="right"
+                width="fill-parent"
+              >
+                {section.title}
+              </Text>
+              {section.items.map((label, itemIndex) => {
+                const key = `${sectionIndex}-${itemIndex}`
+                return (
+                  <CheckboxItem
+                    key={key}
+                    label={label}
+                    checked={checklistItems[key] || false}
+                    onToggle={() => {
+                      setChecklistItems({
+                        ...checklistItems,
+                        [key]: !checklistItems[key]
+                      })
+                    }}
+                  />
+                )
+              })}
+            </AutoLayout>
           ))}
         </AutoLayout>
       )}
