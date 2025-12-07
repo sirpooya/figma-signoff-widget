@@ -73,6 +73,10 @@ const refreshSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width=
 <path d="M21.009 13.101c0.057 0 0.113 0.006 0.169 0.017 0.080 0.016 0.156 0.043 0.227 0.078 0.007 0.004 0.015 0.007 0.023 0.011 0.209 0.112 0.369 0.304 0.438 0.535 0.025 0.085 0.038 0.172 0.038 0.26v4.002c-0 0.497-0.403 0.899-0.899 0.899s-0.9-0.403-0.9-0.899v-1.829l-2.318 2.318c-1.448 1.447-3.379 2.301-5.414 2.401l-0.408 0.010c-3.366-0-6.394-2.049-7.645-5.175l-0.157-0.393c-0.185-0.461 0.040-0.985 0.501-1.17s0.986 0.040 1.171 0.501l0.156 0.392 0.001 0.001c0.977 2.442 3.342 4.044 5.973 4.044 1.706 0 3.343-0.678 4.55-1.885l2.317-2.317h-1.828c-0.497 0-0.9-0.404-0.9-0.9s0.403-0.9 0.9-0.9h4.007zM12.037 3.097c3.366 0 6.394 2.050 7.644 5.176l0.156 0.392c0.184 0.461-0.040 0.986-0.501 1.171s-0.985-0.040-1.17-0.501l-0.157-0.393c-0.977-2.442-3.342-4.044-5.973-4.044-1.706-0-3.343 0.677-4.55 1.884l-2.318 2.318h1.829c0.497 0 0.899 0.403 0.899 0.9s-0.403 0.899-0.899 0.899h-4.002c-0.049 0-0.096-0.005-0.143-0.013-0.011-0.002-0.023-0.004-0.034-0.006-0.045-0.009-0.089-0.022-0.131-0.037-0.013-0.005-0.026-0.009-0.038-0.014-0.010-0.004-0.019-0.009-0.028-0.014-0.095-0.043-0.185-0.103-0.263-0.181-0.034-0.034-0.064-0.071-0.091-0.108-0.041-0.057-0.076-0.119-0.103-0.184-0.027-0.064-0.045-0.131-0.056-0.198-0.008-0.047-0.014-0.095-0.014-0.144v-4.002c0-0.497 0.403-0.9 0.9-0.9s0.9 0.403 0.9 0.9v1.828l2.317-2.317c1.544-1.544 3.639-2.412 5.823-2.412z"></path>
 </svg>`
 
+const featherMiniSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+<path d="M19.158 20.296c0.283 0.001 0.514 0.232 0.514 0.516s-0.231 0.513-0.514 0.514h-8.61c-0.284 0-0.514-0.23-0.514-0.514s0.23-0.516 0.514-0.516h8.61zM20.496 3.085c0.111 0.003 0.22 0.042 0.308 0.112 0.117 0.094 0.189 0.235 0.194 0.385 0.048 1.451-0.195 5.378-3.854 8.056-0.13 0.095-0.299 0.124-0.454 0.077l-2.672-0.815-0.224 2.732c-0.018 0.217-0.172 0.398-0.382 0.454-3.391 0.893-6.076 0.578-7.441 0.288-0.565 1.366-1.273 3.248-1.867 6.214-0.056 0.278-0.326 0.459-0.604 0.404s-0.459-0.326-0.403-0.604c0.671-3.357 1.487-5.38 2.091-6.812 2.976-7.055 10.598-9.579 15.198-10.48l0.11-0.010zM19.967 4.233c-4.416 0.957-10.787 3.335-13.577 9.174 1.253 0.242 3.539 0.461 6.41-0.233l0.248-2.995 0.022-0.114c0.035-0.109 0.106-0.204 0.203-0.27 0.129-0.087 0.29-0.112 0.439-0.067l3.027 0.924c2.651-2.058 3.167-4.866 3.229-6.42z"></path>
+</svg>`
+
 function getStatusIconSrc(status: Status, color: string): string {
   const svgMap: { [key in Status]: string } = {
     "review": inReviewSvg,
@@ -100,6 +104,12 @@ const getWipIconSrc = (color: string) => {
 
 const getRefreshIconSrc = (color: string) => {
   return refreshSvg.replace(/<path d="/, `<path fill="${color}" d="`)
+}
+
+const getFeatherMiniIconSrc = (color: string) => {
+  return featherMiniSvg
+    .replace(/width="24" height="24"/, 'width="12" height="12"')
+    .replace(/<path d="/, `<path fill="${color}" d="`)
 }
 
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
@@ -783,15 +793,34 @@ function CheckboxWidget() {
           ))}
         </AutoLayout>
       )}
-      <Text
-        fontSize={10}
-        fill={colors["content-2"]}
-        fontWeight="light"
-        letterSpacing={0.5}
+      <AutoLayout
+        name="copyright-wrapper"
+        direction="horizontal"
+        verticalAlignItems="center"
+        spacing={4}
+        padding={0}
         width="fill-parent"
+        onClick={() => {
+          figma.openExternal('https://github.com/sirpooya/figma-signoff-widget')
+        }}
+        hoverStyle={{ opacity: 0.8 }}
       >
-        © Pooya Kamel – Licensed under GPLv3
-      </Text>
+        <SVG
+          src={getFeatherMiniIconSrc(colors["content-2"])}
+          width={12}
+          height={12}
+        />
+        <Text
+          name="copyright-notice"
+          fontSize={10}
+          fill={colors["content-2"]}
+          fontWeight="light"
+          letterSpacing={0.5}
+          width="fill-parent"
+        >
+          Design SignOff Widget by Pooya Kamel
+        </Text>
+      </AutoLayout>
     </AutoLayout>
   )
 }
