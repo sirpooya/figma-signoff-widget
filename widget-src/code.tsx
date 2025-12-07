@@ -411,17 +411,15 @@ function CheckboxWidget() {
         tooltip: "Status",
         propertyName: "status",
       },
-      {
-        itemType: "action",
-        tooltip: "Toggle Checklist",
-        propertyName: "toggleChecklist",
-      },
     ],
     ({ propertyName, propertyValue }) => {
       if (propertyName === "status" && propertyValue) {
-        setStatus(propertyValue as Status)
-      } else if (propertyName === "toggleChecklist") {
-        setShowChecklist(!showChecklist)
+        const newStatus = propertyValue as Status
+        setStatus(newStatus)
+        // Show checklist when status changes to "In-Review"
+        if (newStatus === "review") {
+          setShowChecklist(true)
+        }
       }
     }
   )
@@ -533,7 +531,7 @@ function CheckboxWidget() {
           hasBorderBottom={false}
         />
       </AutoLayout>
-      {showChecklist && (
+      {showChecklist && status !== "ready-for-dev" && status !== "live" && status !== "archived" && (
         <AutoLayout
           name="checklist-section"
           direction="vertical"
