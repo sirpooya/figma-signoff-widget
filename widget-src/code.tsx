@@ -1,5 +1,5 @@
 const { widget } = figma
-const { AutoLayout, Text, SVG, useSyncedState, usePropertyMenu } = widget
+const { AutoLayout, Text, SVG, useSyncedState, usePropertyMenu, useEffect } = widget
 
 type Status = "review" | "ready-for-dev" | "live" | "archived"
 
@@ -74,7 +74,7 @@ function DateRow({ label, date, onRefresh, showSeparator }) {
   )
 }
 
-function ApprovalRow({ role, approved, onToggle }) {
+function ApprovalRow({ role, approved, assignee, onToggle }) {
   return (
     <AutoLayout
       direction="horizontal"
@@ -99,7 +99,7 @@ function ApprovalRow({ role, approved, onToggle }) {
           fontSize={12}
           fill="#666666"
         >
-          {"{Assignee}"}
+          {assignee || "{Assignee}"}
         </Text>
       </AutoLayout>
       <AutoLayout
@@ -111,6 +111,7 @@ function ApprovalRow({ role, approved, onToggle }) {
         cornerRadius={16}
         spacing={6}
         onClick={onToggle}
+        hoverStyle={{ opacity: 0.8 }}
       >
         <Text
           fontSize={12}
@@ -213,11 +214,39 @@ function CheckboxWidget() {
   const [finalizationDate, setFinalizationDate] = useSyncedState('finalizationDate', getCurrentDateTime())
   const [lastRevision, setLastRevision] = useSyncedState('lastRevision', getCurrentDateTime())
   const [pmApproved, setPmApproved] = useSyncedState('pmApproved', false)
+  const [pmAssignee, setPmAssignee] = useSyncedState<string | null>('pmAssignee', null)
   const [designLeadApproved, setDesignLeadApproved] = useSyncedState('designLeadApproved', false)
+  const [designLeadAssignee, setDesignLeadAssignee] = useSyncedState<string | null>('designLeadAssignee', null)
   const [dsmApproved, setDsmApproved] = useSyncedState('dsmApproved', false)
+  const [dsmAssignee, setDsmAssignee] = useSyncedState<string | null>('dsmAssignee', null)
   const [item1, setItem1] = useSyncedState('item1', false)
   const [item2, setItem2] = useSyncedState('item2', false)
   const [item3, setItem3] = useSyncedState('item3', false)
+
+  // Capture usernames when items are approved
+  useEffect(() => {
+    if (pmApproved && !pmAssignee) {
+      if (figma.currentUser) {
+        setPmAssignee(figma.currentUser.name)
+      }
+    }
+  })
+  
+  useEffect(() => {
+    if (designLeadApproved && !designLeadAssignee) {
+      if (figma.currentUser) {
+        setDesignLeadAssignee(figma.currentUser.name)
+      }
+    }
+  })
+  
+  useEffect(() => {
+    if (dsmApproved && !dsmAssignee) {
+      if (figma.currentUser) {
+        setDsmAssignee(figma.currentUser.name)
+      }
+    }
+  })
 
   usePropertyMenu(
     [
@@ -286,17 +315,26 @@ function CheckboxWidget() {
         <ApprovalRow
           role="PM"
           approved={pmApproved}
-          onToggle={() => setPmApproved(!pmApproved)}
+          assignee={pmAssignee}
+          onToggle={() => {
+            setPmApproved(!pmApproved)
+          }}
         />
         <ApprovalRow
           role="Design Lead"
           approved={designLeadApproved}
-          onToggle={() => setDesignLeadApproved(!designLeadApproved)}
+          assignee={designLeadAssignee}
+          onToggle={() => {
+            setDesignLeadApproved(!designLeadApproved)
+          }}
         />
         <ApprovalRow
           role="DSM"
           approved={dsmApproved}
-          onToggle={() => setDsmApproved(!dsmApproved)}
+          assignee={dsmAssignee}
+          onToggle={() => {
+            setDsmApproved(!dsmApproved)
+          }}
         />
       </AutoLayout>
       <AutoLayout

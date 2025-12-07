@@ -12,6 +12,9 @@
   ],
   "containsWidget": true,
   "widgetApi": "1.0.0",
+  "permissions": [
+    "currentuser"
+  ],
   "networkAccess": {
     "allowedDomains": [
       "none"
