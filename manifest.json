@@ -2,7 +2,7 @@
   "name": "Design SignOff",
   "id": "1542089813823718390",
   "api": "1.0.0",
-  "main": "code.js",
+  "main": "dist/code.js",
   "capabilities": [],
   "enableProposedApi": false,
   "documentAccess": "dynamic-page",

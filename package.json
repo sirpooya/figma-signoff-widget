@@ -1,10 +1,11 @@
 {
   "name": "Design-SignOff",
   "version": "1.0.0",
-  "description": "Figma widget for design sign-off process with Persian timestamp",
-  "main": "code.js",
+  "description": "Figma widget for design sign-off process",
   "scripts": {
-    "test": "echo 'Widget ready to use in Figma!'"
+    "test": "tsc -p widget-src --noEmit",
+    "build": "esbuild widget-src/code.tsx --bundle --outfile=dist/code.js",
+    "dev": "concurrently -n tsc,build 'npm run test -- --preserveWatchOutput --watch' 'npm run build -- --watch'"
   },
   "author": "",
   "license": "MIT",
@@ -12,8 +13,15 @@
     "figma",
     "widget",
     "design",
-    "signoff",
-    "persian",
-    "timestamp"
-  ]
+    "signoff"
+  ],
+  "dependencies": {
+    "typescript": "^4.3.5"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.49.0",
+    "@figma/widget-typings": "^1.4.0",
+    "concurrently": "^6.4.0",
+    "esbuild": "^0.13.15"
+  }
 }
