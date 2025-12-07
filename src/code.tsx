@@ -72,6 +72,23 @@ const getRefreshIconSrc = (color: string) => {
   return refreshSvgBase
 }
 
+function getStatusIconSrc(status: Status, color: string): string {
+  const svgMap: { [key in Status]: string } = {
+    "review": inReviewSvg,
+    "ready-for-dev": readyForDevSvg,
+    "live": liveSvg,
+    "live-app": liveAppSvg,
+    "live-web": liveWebSvg,
+    "archived": archivedSvg
+  }
+  
+  const svg = svgMap[status]
+  // Replace width/height to 14x14 and add fill color to path
+  return svg
+    .replace(/width="24" height="24"/, 'width="14" height="14"')
+    .replace(/<path d="/, `<path fill="${color}" d="`)
+}
+
 function formatDateTime(date: Date): string {
   const year = date.getFullYear()
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
@@ -346,9 +363,14 @@ function TitleSection({ status, photoUrl, userName }: { status: Status; photoUrl
         horizontalAlignItems="center"
         padding={{ left: 12, right: 12, top: 6, bottom: 6 }}
         fill={config.color}
-        cornerRadius={8}
+        cornerRadius={96}
         spacing={6}
       >
+        <SVG
+          src={getStatusIconSrc(status, config.textColor)}
+          width={14}
+          height={14}
+        />
         <Text
           fontFamily="Inter"
           fontSize={12}
