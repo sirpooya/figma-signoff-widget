@@ -555,7 +555,7 @@ function CheckboxWidget() {
           color: colors["border-1"]
         }}
         strokeWidth={1}
-        cornerRadius={8}
+        cornerRadius={12}
       >
         <DateRow
           label="Designer"
@@ -586,7 +586,7 @@ function CheckboxWidget() {
           color: colors["border-1"]
         }}
         strokeWidth={1}
-        cornerRadius={8}
+        cornerRadius={12}
       >
         <ApprovalRow
           role="PM"
