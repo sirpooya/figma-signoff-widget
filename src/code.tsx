@@ -458,7 +458,7 @@ function TitleSection({ status, photoUrl, userName, designerSignedOff }: { statu
           fontWeight="bold"
           width="fill-parent"
         >
-          Design Sign-Off
+          Design Sign Off
         </Text>
       </AutoLayout>
       <AutoLayout
@@ -823,7 +823,7 @@ function CheckboxWidget() {
           letterSpacing={0.5}
           width="fill-parent"
         >
-          Design SignOff Widget
+          DesignSignOff Widget
         </Text>
       </AutoLayout>
     </AutoLayout>
