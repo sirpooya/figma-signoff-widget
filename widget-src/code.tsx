@@ -12,6 +12,7 @@ const colors = {
   "error": "#EB3850",
   "info": "#3F69F2",
   "success": "#3DAA58",
+  "success-tonal": "#E8F5EB",
   "warning": "#F57F17",
   "warning-tonal": "#FEF0E3",
   "on-warning-tonal": "#934C0E",
@@ -202,11 +203,13 @@ function ApprovalRow({ role, approved, assignee, photoUrl, onToggle, hasBorderBo
 function CheckboxItem({ label, checked, onToggle }) {
   return (
     <AutoLayout
+      name="checkbox-row"
       direction="horizontal"
       verticalAlignItems="center"
-      spacing={12}
-      padding={{ top: 8, bottom: 8, left: 0, right: 0 }}
+      spacing={8}
+      padding={{ top: 6, bottom: 6, left: 0, right: 0 }}
       width="fill-parent"
+      fill={checked ? colors["success-tonal"] : undefined}
       onClick={onToggle}
     >
       <Text
@@ -215,26 +218,28 @@ function CheckboxItem({ label, checked, onToggle }) {
         fontFamily="Vazirmatn"
         horizontalAlignText="right"
         width="fill-parent"
+        textDecoration={checked ? "strikethrough" : "none"}
       >
         {label}
       </Text>
       <AutoLayout
-        width={20}
-        height={20}
+        name="checkbox"
+        width={24}
+        height={24}
         verticalAlignItems="center"
         horizontalAlignItems="center"
-        fill={checked ? "#6366F1" : "#FFFFFF"}
-        cornerRadius={4}
+        fill={checked ? colors.success : "#FFFFFF"}
+        cornerRadius={96}
         stroke={{
           type: 'solid',
-          color: checked ? "#6366F1" : "#000000"
+          color: checked ? colors.success : colors["border-1"]
         }}
         strokeWidth={2}
       >
         {checked && (
           <Text
             fontSize={14}
-            fill="#FFFFFF"
+            fill={colors["on-success"]}
           >
             ✓
           </Text>
@@ -532,10 +537,20 @@ function CheckboxWidget() {
           direction="vertical"
           verticalAlignItems="start"
           horizontalAlignItems="end"
-          spacing={12}
+          spacing={16}
           padding={0}
           width="fill-parent"
         >
+          <Text
+            fontSize={20}
+            fill={colors["content-1"]}
+            fontWeight="bold"
+            fontFamily="Vazirmatn"
+            horizontalAlignText="right"
+            width="fill-parent"
+          >
+            چک‌لیست هنداف
+          </Text>
           {checklistData.sections.map((section, sectionIndex) => (
             <AutoLayout
               key={sectionIndex}
@@ -543,7 +558,7 @@ function CheckboxWidget() {
               direction="vertical"
               verticalAlignItems="start"
               horizontalAlignItems="end"
-              spacing={8}
+              spacing={0}
               padding={0}
               width="fill-parent"
             >
