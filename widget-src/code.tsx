@@ -3,13 +3,31 @@ const { AutoLayout, Text, SVG, Image, Rectangle, useSyncedState, usePropertyMenu
 
 import * as checklistData from './checklist.json'
 
+// Color variables
+const colors = {
+  "content-1": "#1F1F1F",
+  "content-2": "#5C5C5C",
+  "link": "#1672DD",
+  "border-1": "#ECEDEF",
+  "error": "#EB3850",
+  "info": "#3F69F2",
+  "success": "#3DAA58",
+  "warning": "#F57F17",
+  "warning-tonal": "rgba(245, 127, 23, 0.12)",
+  "on-warning-tonal": "#934C0E",
+  "on-error": "#FFFFFF",
+  "on-info": "#FFFFFF",
+  "on-success": "#FFFFFF",
+  "on-warning": "#FFFFFF"
+}
+
 type Status = "review" | "ready-for-dev" | "live" | "archived"
 
 const statusConfig: { [key in Status]: { label: string; color: string; textColor: string } } = {
-  "review": { label: "Review", color: "#F2994A", textColor: "#FFFFFF" },
-  "ready-for-dev": { label: "Ready for Dev", color: "#27AE60", textColor: "#FFFFFF" },
-  "live": { label: "Live", color: "#2F80ED", textColor: "#FFFFFF" },
-  "archived": { label: "Archived", color: "#EB5757", textColor: "#FFFFFF" }
+  "review": { label: "Review", color: colors.warning, textColor: colors["on-warning"] },
+  "ready-for-dev": { label: "Ready for Dev", color: colors.success, textColor: colors["on-success"] },
+  "live": { label: "Live", color: colors.info, textColor: colors["on-info"] },
+  "archived": { label: "Archived", color: colors.error, textColor: colors["on-error"] }
 }
 
 const refreshIconSrc = `
@@ -206,62 +224,72 @@ function TitleSection({ status, photoUrl, userName }: { status: Status; photoUrl
   const config = statusConfig[status]
   return (
     <AutoLayout
-      name="Title Section"
-      direction="vertical"
-      verticalAlignItems="start"
-      spacing={8}
+      name="header-wrapper"
+      direction="horizontal"
+      verticalAlignItems="center"
+      horizontalAlignItems="start"
+      spacing={12}
       padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
       width="fill-parent"
     >
       <AutoLayout
-        direction="horizontal"
-        verticalAlignItems="center"
-        spacing={12}
+        name="title-section"
+        direction="vertical"
+        verticalAlignItems="start"
+        spacing={8}
         padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
         width="fill-parent"
       >
         <Text
-          fontSize={16}
-          fill="#000000"
+          name="title"
+          fontSize={20}
+          fill={colors["content-1"]}
           fontWeight="bold"
+          width="fill-parent"
         >
           Design Sign-Off
         </Text>
         <AutoLayout
+          name="subtitle-wrapper"
           direction="horizontal"
           verticalAlignItems="center"
-          horizontalAlignItems="center"
-          padding={{ left: 12, right: 12, top: 6, bottom: 6 }}
-          fill={config.color}
-          cornerRadius={8}
-          spacing={6}
+          spacing={8}
+          padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
+          width="fill-parent"
         >
+          {photoUrl ? (
+            <Image name="avatar" cornerRadius={12} width={24} height={24} src={String(photoUrl)} />
+          ) : (
+            <Rectangle name="avatar" cornerRadius={12} width={24} height={24} fill={colors["content-1"]} />
+          )}
           <Text
-            fontSize={12}
-            fill={config.textColor}
-            fontWeight="bold"
+            name="subtitle"
+            fontSize={14}
+            fill={colors["content-2"]}
+            width="fill-parent"
           >
-            {config.label}
+            {userName}
           </Text>
         </AutoLayout>
       </AutoLayout>
       <AutoLayout
+        name="status-badge"
         direction="horizontal"
         verticalAlignItems="center"
-        spacing={8}
-        padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
+        horizontalAlignItems="center"
+        padding={{ left: 12, right: 12, top: 6, bottom: 6 }}
+        fill={config.color}
+        cornerRadius={8}
+        spacing={6}
       >
-        {photoUrl ? (
-          <Image cornerRadius={12} width={24} height={24} src={String(photoUrl)} />
-        ) : (
-          <Rectangle cornerRadius={12} width={24} height={24} fill="#2A2A2A" />
-        )}
         <Text
-          fontSize={14}
-          fill="#000000"
+          fontFamily="Inter"
+          fontSize={12}
+          fill={config.textColor}
           fontWeight="medium"
+          letterSpacing={2}
         >
-          {userName}
+          {config.label.toUpperCase()}
         </Text>
       </AutoLayout>
     </AutoLayout>
@@ -368,10 +396,10 @@ function CheckboxWidget() {
       name="Widget Root"
       direction="vertical"
       verticalAlignItems="start"
-      padding={16}
+      padding={24}
       fill="#FFFFFF"
       cornerRadius={0}
-      spacing={12}
+      spacing={24}
       width={400}
     >
       <TitleSection status={status} photoUrl={currentUserPhotoUrl} userName={currentUserName} />
