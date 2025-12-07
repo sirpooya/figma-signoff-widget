@@ -458,7 +458,7 @@ function TitleSection({ status, photoUrl, userName, designerSignedOff }: { statu
           fontWeight="bold"
           width="fill-parent"
         >
-          Design Sign Off
+          Design Status
         </Text>
       </AutoLayout>
       <AutoLayout
