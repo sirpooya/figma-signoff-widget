@@ -7,6 +7,7 @@ import * as checklistData from './checklist.json'
 const colors = {
   "content-1": "#1F1F1F",
   "content-2": "#5C5C5C",
+  "content-3": "#A2A2A2",
   "link": "#1672DD",
   "border-1": "#ECEDEF",
   "error": "#EB3850",
@@ -89,15 +90,21 @@ function getStatusIconSrc(status: Status, color: string): string {
     .replace(/<path d="/, `<path fill="${color}" d="`)
 }
 
-function formatDateTime(date: Date): string {
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                    'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
+
+function formatDateTime(date: Date, options?: { includeYear?: boolean; separator?: string; padDay?: boolean }): string {
+  const { includeYear = true, separator = ' - ', padDay = true } = options || {}
   const year = date.getFullYear()
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                      'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
   const month = monthNames[date.getMonth()]
-  const day = String(date.getDate()).padStart(2, '0')
+  const day = padDay ? String(date.getDate()).padStart(2, '0') : date.getDate()
   const hours = String(date.getHours()).padStart(2, '0')
   const minutes = String(date.getMinutes()).padStart(2, '0')
-  return `${year} ${month} ${day} - ${hours}:${minutes}`
+  
+  if (includeYear) {
+    return `${year} ${month} ${day}${separator}${hours}:${minutes}`
+  }
+  return `${month} ${day}${separator}${hours}:${minutes}`
 }
 
 function getCurrentDateTime(): string {
@@ -123,7 +130,7 @@ function DateRow({ label, date, onRefresh, hasBorderBottom }) {
         name="time-wrapper"
         direction="vertical"
         verticalAlignItems="start"
-        spacing={4}
+        spacing={6}
         width="fill-parent"
       >
         <Text
@@ -154,7 +161,7 @@ function DateRow({ label, date, onRefresh, hasBorderBottom }) {
   )
 }
 
-function ApprovalRow({ role, approved, assignee, photoUrl, onToggle, hasBorderBottom }) {
+function ApprovalRow({ role, approved, assignee, photoUrl, timestamp, onToggle, hasBorderBottom }) {
   const config = approved 
     ? { label: "Approved", color: colors.success, textColor: colors["on-success"] }
     : { label: "In-Review", color: colors["warning-tonal"], textColor: colors["on-warning-tonal"] }
@@ -178,7 +185,7 @@ function ApprovalRow({ role, approved, assignee, photoUrl, onToggle, hasBorderBo
         name="approval-wrapper"
         direction="vertical"
         verticalAlignItems="start"
-        spacing={4}
+        spacing={6}
         width="fill-parent"
       >
         <Text
@@ -194,7 +201,7 @@ function ApprovalRow({ role, approved, assignee, photoUrl, onToggle, hasBorderBo
           name="assignee-wrapper"
           direction="horizontal"
           verticalAlignItems="center"
-          spacing={8}
+          spacing={6}
           padding={0}
           width="fill-parent"
         >
@@ -220,10 +227,27 @@ function ApprovalRow({ role, approved, assignee, photoUrl, onToggle, hasBorderBo
             fontSize={14}
             fill={colors["content-2"]}
             fontWeight="normal"
-            width="fill-parent"
           >
-            {assignee || "{Assignee}"}
+            {assignee || "Assignee"}
           </Text>
+          {approved && timestamp && (
+            <>
+              <Text
+                fontSize={14}
+                fill={colors["content-3"]}
+                fontWeight="normal"
+              >
+                –
+              </Text>
+              <Text
+                fontSize={14}
+                fill={colors["content-3"]}
+                fontWeight="normal"
+              >
+                {timestamp}
+              </Text>
+            </>
+          )}
         </AutoLayout>
       </AutoLayout>
       <AutoLayout
@@ -336,7 +360,7 @@ function TitleSection({ status, photoUrl, userName }: { status: Status; photoUrl
           name="subtitle-wrapper"
           direction="horizontal"
           verticalAlignItems="center"
-          spacing={8}
+          spacing={6}
           padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
           width="fill-parent"
         >
@@ -392,12 +416,15 @@ function CheckboxWidget() {
   const [pmApproved, setPmApproved] = useSyncedState('pmApproved', false)
   const [pmAssignee, setPmAssignee] = useSyncedState<string | null>('pmAssignee', null)
   const [pmPhotoUrl, setPmPhotoUrl] = useSyncedState<string | null>('pmPhotoUrl', null)
+  const [pmTimestamp, setPmTimestamp] = useSyncedState<string | null>('pmTimestamp', null)
   const [designLeadApproved, setDesignLeadApproved] = useSyncedState('designLeadApproved', false)
   const [designLeadAssignee, setDesignLeadAssignee] = useSyncedState<string | null>('designLeadAssignee', null)
   const [designLeadPhotoUrl, setDesignLeadPhotoUrl] = useSyncedState<string | null>('designLeadPhotoUrl', null)
+  const [designLeadTimestamp, setDesignLeadTimestamp] = useSyncedState<string | null>('designLeadTimestamp', null)
   const [dsmApproved, setDsmApproved] = useSyncedState('dsmApproved', false)
   const [dsmAssignee, setDsmAssignee] = useSyncedState<string | null>('dsmAssignee', null)
   const [dsmPhotoUrl, setDsmPhotoUrl] = useSyncedState<string | null>('dsmPhotoUrl', null)
+  const [dsmTimestamp, setDsmTimestamp] = useSyncedState<string | null>('dsmTimestamp', null)
   const [showChecklist, setShowChecklist] = useSyncedState('showChecklist', true)
   // Current user info for avatar display
   const [currentUserName, setCurrentUserName] = useSyncedState<string>('currentUserName', "")
@@ -549,10 +576,13 @@ function CheckboxWidget() {
               setPmApproved(false)
               setPmAssignee(null)
               setPmPhotoUrl(null)
+              setPmTimestamp(null)
             } else {
               setPmApproved(true)
+              setPmTimestamp(formatDateTime(new Date(), { includeYear: false, separator: ', ', padDay: false }))
             }
           }}
+          timestamp={pmTimestamp}
           hasBorderBottom={true}
         />
         <ApprovalRow
@@ -566,10 +596,13 @@ function CheckboxWidget() {
               setDesignLeadApproved(false)
               setDesignLeadAssignee(null)
               setDesignLeadPhotoUrl(null)
+              setDesignLeadTimestamp(null)
             } else {
               setDesignLeadApproved(true)
+              setDesignLeadTimestamp(formatDateTime(new Date(), { includeYear: false, separator: ', ', padDay: false }))
             }
           }}
+          timestamp={designLeadTimestamp}
           hasBorderBottom={true}
         />
         <ApprovalRow
@@ -583,10 +616,13 @@ function CheckboxWidget() {
               setDsmApproved(false)
               setDsmAssignee(null)
               setDsmPhotoUrl(null)
+              setDsmTimestamp(null)
             } else {
               setDsmApproved(true)
+              setDsmTimestamp(formatDateTime(new Date(), { includeYear: false, separator: ', ', padDay: false }))
             }
           }}
+          timestamp={dsmTimestamp}
           hasBorderBottom={false}
         />
       </AutoLayout>
