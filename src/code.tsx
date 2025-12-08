@@ -15,6 +15,16 @@ type ChecklistData = {
   }>
 }
 
+// RTL Detection: Check if text contains Persian/Arabic characters
+function isRTL(text: string): boolean {
+  // Persian/Arabic Unicode ranges:
+  // U+0600-U+06FF: Arabic block (includes Persian)
+  // U+FB50-U+FDFF: Arabic Presentation Forms-A
+  // U+FE70-U+FEFF: Arabic Presentation Forms-B
+  const rtlRegex = /[\u0600-\u06FF\uFB50-\uFDFF\uFE70-\uFEFF]/
+  return rtlRegex.test(text)
+}
+
 // Color variables
 const colors = {
   "content-1": "#1F1F1F",
@@ -388,7 +398,52 @@ function ApprovalRow({ role, approved, assignee, photoUrl, timestamp, onToggle, 
   )
 }
 
-function CheckboxItem({ label, checked, onToggle }) {
+function CheckboxItem({ label, checked, onToggle, direction = 'rtl' }: { label: string; checked: boolean; onToggle: () => void; direction?: 'rtl' | 'ltr' }) {
+  const isRTLDirection = direction === 'rtl'
+  const textAlign = isRTLDirection ? 'right' : 'left'
+  const fontFamily = isRTLDirection ? 'Vazirmatn' : 'Inter'
+  
+  // For RTL: text first, then checkbox (current layout)
+  // For LTR: checkbox first, then text (reversed)
+  const checkboxElement = (
+    <AutoLayout
+      name="checkbox"
+      width={24}
+      height={24}
+      verticalAlignItems="center"
+      horizontalAlignItems="center"
+      fill={checked ? colors.success : "#FFFFFF"}
+      cornerRadius={96}
+      stroke={{
+        type: 'solid',
+        color: checked ? colors.success : colors["border-1"]
+      }}
+      strokeWidth={2}
+    >
+      {checked && (
+        <Text
+          fontSize={14}
+          fill={colors["on-success"]}
+        >
+          ✓
+        </Text>
+      )}
+    </AutoLayout>
+  )
+  
+  const textElement = (
+    <Text
+      fontSize={14}
+      fill="#000000"
+      fontFamily={fontFamily}
+      horizontalAlignText={textAlign}
+      width="fill-parent"
+      textDecoration={checked ? "strikethrough" : "none"}
+    >
+      {label}
+    </Text>
+  )
+  
   return (
     <AutoLayout
       name="checkbox-row"
@@ -400,41 +455,18 @@ function CheckboxItem({ label, checked, onToggle }) {
       fill={checked ? colors["success-tonal"] : undefined}
       onClick={onToggle}
       hoverStyle={{ opacity: 0.8 }}
-
     >
-      <Text
-        fontSize={14}
-        fill="#000000"
-        fontFamily="Vazirmatn"
-        horizontalAlignText="right"
-        width="fill-parent"
-        textDecoration={checked ? "strikethrough" : "none"}
-      >
-        {label}
-      </Text>
-      <AutoLayout
-        name="checkbox"
-        width={24}
-        height={24}
-        verticalAlignItems="center"
-        horizontalAlignItems="center"
-        fill={checked ? colors.success : "#FFFFFF"}
-        cornerRadius={96}
-        stroke={{
-          type: 'solid',
-          color: checked ? colors.success : colors["border-1"]
-        }}
-        strokeWidth={2}
-      >
-        {checked && (
-          <Text
-            fontSize={14}
-            fill={colors["on-success"]}
-          >
-            ✓
-          </Text>
-        )}
-      </AutoLayout>
+      {isRTLDirection ? (
+        <>
+          {textElement}
+          {checkboxElement}
+        </>
+      ) : (
+        <>
+          {checkboxElement}
+          {textElement}
+        </>
+      )}
     </AutoLayout>
   )
 }
@@ -541,6 +573,8 @@ function CheckboxWidget() {
     'checklistItems',
     {}
   )
+  
+  // Direction will be computed directly from checklistData.headline in render logic
 
   // Try to fetch external checklist from GitHub URL first, fallback to default if it fails
   useEffect(() => {
@@ -628,7 +662,7 @@ function CheckboxWidget() {
             return acc
           }, {} as { [key: string]: boolean })
           setChecklistItems(newItems)
-          figma.notify('✓ Checklist loaded from URL', { timeout: 2000 })
+          // figma.notify('Checklist loaded from URL', { timeout: 2000 })
           handled = true // Only set handled after successful completion
         } else {
           throw new Error('Invalid checklist structure')
@@ -644,11 +678,14 @@ function CheckboxWidget() {
         
         // Check for specific error types and show appropriate notification
         if (error?.name === 'TypeError' && error?.message?.includes('Failed to fetch')) {
-          figma.notify('⚠ Network blocked. Using fallback checklist.', { timeout: 3000 })
+          figma.notify('Using fallback checklist (Network blocked).', { timeout: 3000 })
+          // figma.notify('⚠ Network blocked. Using fallback checklist.', { timeout: 3000 })
         } else if (error?.message?.includes('timeout')) {
-          figma.notify('⚠ Request timeout. Using fallback checklist.', { timeout: 3000 })
+          figma.notify('Using fallback checklist (Request timeout).', { timeout: 3000 })
+          // figma.notify('⚠ Request timeout. Using fallback checklist.', { timeout: 3000 })
         } else {
-          figma.notify('⚠ Fetch failed. Using fallback checklist.', { timeout: 3000 })
+          figma.notify('Using fallback checklist (Fetch failed).', { timeout: 3000 })
+          // figma.notify('⚠ Fetch failed. Using fallback checklist.', { timeout: 3000 })
         }
         
         // Fallback to bundled fallback checklist - ALWAYS set this
@@ -669,7 +706,7 @@ function CheckboxWidget() {
           }, {})
           setChecklistItems(newItems)
         } else {
-          figma.notify('✗ Failed to load checklist', { error: true })
+          figma.notify('Failed to load checklist', { timeout: 3000, error: true })
         }
       })
       .catch(err => {
@@ -701,7 +738,7 @@ function CheckboxWidget() {
         setCurrentUserName(figma.currentUser.name)
         setCurrentUserPhotoUrl(figma.currentUser.photoUrl)
       } else {
-        figma.notify("Please login to Figma")
+        figma.notify("Please login to Figma", { timeout: 3000 })
       }
     }
   })
@@ -921,12 +958,18 @@ function CheckboxWidget() {
           return null
         }
         
+        // Compute direction directly from headline (no state delay)
+        const isRTLDirection = checklistData && checklistData.headline ? isRTL(checklistData.headline) : true // Default to RTL if no headline
+        const textAlign = isRTLDirection ? 'right' : 'left'
+        const horizontalAlign = isRTLDirection ? 'end' : 'start'
+        const fontFamily = isRTLDirection ? 'Vazirmatn' : 'Inter'
+        
         return (
           <AutoLayout
             name="checklist-section"
             direction="vertical"
             verticalAlignItems="start"
-            horizontalAlignItems="end"
+            horizontalAlignItems={horizontalAlign}
             spacing={16}
             padding={0}
             width="fill-parent"
@@ -935,8 +978,8 @@ function CheckboxWidget() {
               fontSize={20}
               fill={colors["content-1"]}
               fontWeight="bold"
-              fontFamily="Vazirmatn"
-              horizontalAlignText="right"
+              fontFamily={fontFamily}
+              horizontalAlignText={textAlign}
               width="fill-parent"
             >
               {checklistData.headline}
@@ -947,7 +990,7 @@ function CheckboxWidget() {
               name="checklist-group"
               direction="vertical"
               verticalAlignItems="start"
-              horizontalAlignItems="end"
+              horizontalAlignItems={horizontalAlign}
               spacing={0}
               padding={0}
               width="fill-parent"
@@ -957,8 +1000,8 @@ function CheckboxWidget() {
                 fontSize={14}
                 fill={colors["content-1"]}
                 fontWeight="bold"
-                fontFamily="Vazirmatn"
-                horizontalAlignText="right"
+                fontFamily={fontFamily}
+                horizontalAlignText={textAlign}
                 width="fill-parent"
               >
                 {section.title}
@@ -970,6 +1013,7 @@ function CheckboxWidget() {
                     key={key}
                     label={label}
                     checked={checklistItems[key] || false}
+                    direction={isRTLDirection ? 'rtl' : 'ltr'}
                     onToggle={() => {
                       setChecklistItems({
                         ...checklistItems,

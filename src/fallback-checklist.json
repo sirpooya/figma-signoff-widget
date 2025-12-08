@@ -6,7 +6,7 @@
       "items": [
         "Pull the latest library updates and resolve all deprecated items.",
         "Connect all colors and spacings to tokens; test by switching variable modes.",
-        "Avoid detaches and overrides; ensure all elements appear as purple frames in Outline Mode (⌘Y). Detach only when explicitly allowed in guidelines.",
+        "Avoid detach and overrides; All elements must appear as purple frames in Outline Mode (⌘Y). Detach only if allowed explicitly in guidelines.",
         "Use the correct component for each use case.",
         "Define all assets and repeatable patterns as local components."
       ]
