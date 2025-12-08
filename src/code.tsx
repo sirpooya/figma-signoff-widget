@@ -523,10 +523,16 @@ function CheckboxWidget() {
   const [currentUserName, setCurrentUserName] = useSyncedState<string>('currentUserName', "")
   const [currentUserPhotoUrl, setCurrentUserPhotoUrl] = useSyncedState<string | null>('currentUserPhotoUrl', null)
   
-  // Store checklist data structure in syncedState
+  // Store checklist data structure in syncedState - start as null, will be set after fetch attempt
   const [checklistData, setChecklistData] = useSyncedState<ChecklistData | null>(
     'checklistData',
     null
+  )
+  
+  // Track if we've attempted to fetch the external checklist
+  const [hasFetchedExternal, setHasFetchedExternal] = useSyncedState<boolean>(
+    'hasFetchedExternal',
+    false
   )
   
   // Initialize checklist items state from JSON
@@ -535,14 +541,14 @@ function CheckboxWidget() {
     {}
   )
 
-  // Load checklist data on widget initialization
+  // Try to fetch external checklist from GitHub URL first, fallback to default if it fails
   useEffect(() => {
-    // If checklist data is already loaded, skip
-    if (checklistData) {
+    // Only fetch if we haven't tried yet
+    if (hasFetchedExternal) {
       return
     }
     
-    // Try to fetch from GitHub URL
+    // Try to fetch from GitHub URL first
     fetch(DEFAULT_CHECKLIST_URL)
       .then(response => {
         if (!response.ok) {
@@ -554,39 +560,37 @@ function CheckboxWidget() {
         // Validate the structure
         if (data && data.sections && Array.isArray(data.sections)) {
           setChecklistData(data)
-          // Initialize checklist items if not already set
-          if (Object.keys(checklistItems).length === 0) {
-            const initialItems = data.sections.reduce((acc, section, sectionIndex) => {
-              section.items.forEach((_, itemIndex) => {
-                const key = `${sectionIndex}-${itemIndex}`
-                acc[key] = false
-              })
-              return acc
-            }, {} as { [key: string]: boolean })
-            setChecklistItems(initialItems)
-          }
-        } else {
-          throw new Error('Invalid checklist structure')
-        }
-      })
-      .catch(error => {
-        console.error('Failed to fetch checklist from GitHub:', error)
-        // Fallback to default checklist
-        const fallbackData = defaultChecklistData as ChecklistData
-        setChecklistData(fallbackData)
-        // Initialize checklist items if not already set
-        if (Object.keys(checklistItems).length === 0) {
-          const initialItems = fallbackData.sections.reduce((acc, section, sectionIndex) => {
+          // Initialize checklist items for the external structure
+          const newItems = data.sections.reduce((acc, section, sectionIndex) => {
             section.items.forEach((_, itemIndex) => {
               const key = `${sectionIndex}-${itemIndex}`
               acc[key] = false
             })
             return acc
           }, {} as { [key: string]: boolean })
-          setChecklistItems(initialItems)
+          setChecklistItems(newItems)
+          setHasFetchedExternal(true)
+        } else {
+          throw new Error('Invalid checklist structure')
         }
       })
-  }, [checklistData])
+      .catch(error => {
+        console.error('Failed to fetch checklist from GitHub:', error)
+        // Fallback to default bundled checklist
+        const fallbackData = defaultChecklistData as ChecklistData
+        setChecklistData(fallbackData)
+        // Initialize checklist items for the default structure
+        const newItems = fallbackData.sections.reduce((acc, section, sectionIndex) => {
+          section.items.forEach((_, itemIndex) => {
+            const key = `${sectionIndex}-${itemIndex}`
+            acc[key] = false
+          })
+          return acc
+        }, {} as { [key: string]: boolean })
+        setChecklistItems(newItems)
+        setHasFetchedExternal(true)
+      })
+  }, [hasFetchedExternal])
 
   // Capture current user info when widget loads (EXACTLY matching WidgetUserBadge pattern)
   useEffect(() => {
