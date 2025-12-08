@@ -19,7 +19,8 @@
     "allowedDomains": [
       "https://s3-alpha.figma.com",
       "https://s3.figma.com",
-      "https://raw.githubusercontent.com"
+      "https://raw.githubusercontent.com",
+      "https://api.github.com"
     ]
   }
 }

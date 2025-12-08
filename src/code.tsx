@@ -1,10 +1,10 @@
 const { widget } = figma
-const { AutoLayout, Text, SVG, Image, Rectangle, useSyncedState, usePropertyMenu, useEffect } = widget
+const { AutoLayout, Text, SVG, Image, Rectangle, useSyncedState, usePropertyMenu, useEffect, waitForTask } = widget
 
-import * as defaultChecklistData from './default-checklist.json'
+import * as fallbackChecklistData from './fallback-checklist.json'
 
-// Default GitHub URL for checklist
-const DEFAULT_CHECKLIST_URL = 'https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/dk-checklist.json'
+// External GitHub URL for dk-checklist.json
+const EXTERNAL_CHECKLIST_URL = 'https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/dk-checklist.json'
 
 // Type definition for checklist structure
 type ChecklistData = {
@@ -544,22 +544,150 @@ function CheckboxWidget() {
 
   // Try to fetch external checklist from GitHub URL first, fallback to default if it fails
   useEffect(() => {
+    console.log('[CHECKLIST] useEffect triggered, hasFetchedExternal:', hasFetchedExternal, 'checklistData:', checklistData)
+    
     // Only fetch if we haven't tried yet
     if (hasFetchedExternal) {
+      console.log('[CHECKLIST] Already fetched, skipping')
+      // Don't set fallback here - let the fetch timeout/catch handle it
+      // This prevents race conditions where fallback is set before fetch completes
       return
     }
     
+    // Set flag immediately to prevent infinite loop
+    console.log('[CHECKLIST] Setting hasFetchedExternal to true')
+    setHasFetchedExternal(true)
+    
+    console.log('[CHECKLIST] Starting fetch from:', EXTERNAL_CHECKLIST_URL)
+    figma.notify('Fetching checklist from GitHub...', { timeout: 2000 })
+    
+    // Note: Timeout is now handled in the fetchWithTimeout promise race
+    
     // Try to fetch from GitHub URL first
-    fetch(DEFAULT_CHECKLIST_URL)
+    console.log('[CHECKLIST] Calling fetch()...')
+    console.log('[CHECKLIST] Fetch URL:', EXTERNAL_CHECKLIST_URL)
+    
+    // Create a promise that will reject after timeout
+    console.log('[CHECKLIST] Creating fetch promise...')
+    console.log('[CHECKLIST] URL:', EXTERNAL_CHECKLIST_URL)
+    
+    let fetchPromise: Promise<Response>
+    try {
+      fetchPromise = fetch(EXTERNAL_CHECKLIST_URL)
+      console.log('[CHECKLIST] Fetch called, promise created')
+    } catch (err) {
+      console.error('[CHECKLIST] Fetch threw synchronously:', err)
+      fetchPromise = Promise.reject(err)
+    }
+    
+    fetchPromise = fetchPromise.catch(err => {
+      console.error('[CHECKLIST] Fetch promise rejected:', err)
+      console.error('[CHECKLIST] Error type:', typeof err)
+      console.error('[CHECKLIST] Error constructor:', err?.constructor?.name)
+      console.error('[CHECKLIST] Error message:', err?.message)
+      console.error('[CHECKLIST] Error name:', err?.name)
+      if (err instanceof TypeError) {
+        console.error('[CHECKLIST] This is a TypeError - likely network/CORS issue')
+      }
+      throw err
+    })
+    
+    console.log('[CHECKLIST] Creating timeout promise (5 seconds)...')
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      const timeoutId = setTimeout(() => {
+        console.error('[CHECKLIST] ⏰ TIMEOUT REACHED - fetch took too long (5 seconds)')
+        console.error('[CHECKLIST] This means the fetch promise never resolved or rejected')
+        console.error('[CHECKLIST] The request is likely being blocked by Figma network restrictions')
+        reject(new Error('Fetch timeout after 5 seconds'))
+      }, 5000)
+      console.log('[CHECKLIST] Timeout timer set, ID:', timeoutId)
+      console.log('[CHECKLIST] Timeout will fire in 5 seconds if fetch does not complete')
+    })
+    
+    console.log('[CHECKLIST] Racing fetch and timeout promises...')
+    console.log('[CHECKLIST] Waiting for either fetch to complete or timeout (5 seconds)...')
+    
+    // Track if we've handled the response
+    let handled = false
+    
+    // Set up a separate fallback timeout that will definitely fire after 6 seconds
+    const fallbackTimeoutId = setTimeout(() => {
+      if (!handled && !checklistData) {
+        console.error('[CHECKLIST] ⏰ FALLBACK TIMEOUT - 6 seconds passed, fetch never completed')
+        console.error('[CHECKLIST] Setting fallback checklist directly from timeout')
+        handled = true
+        const fallbackData = (fallbackChecklistData as any).default || fallbackChecklistData as ChecklistData
+        const data = fallbackData.default || fallbackData
+        if (data && data.sections) {
+          setChecklistData(data as ChecklistData)
+          const newItems = data.sections.reduce((acc: { [key: string]: boolean }, section: any, sectionIndex: number) => {
+            section.items.forEach((_: any, itemIndex: number) => {
+              const key = `${sectionIndex}-${itemIndex}`
+              acc[key] = false
+            })
+            return acc
+          }, {})
+          setChecklistItems(newItems)
+          figma.notify('⚠ Using fallback checklist (fetch timeout)', { timeout: 3000 })
+        }
+      }
+    }, 6000) // 6 seconds - slightly longer than the Promise.race timeout
+    
+    // CRITICAL: Use waitForTask to keep widget alive during async fetch
+    console.log('[CHECKLIST] Wrapping fetch in waitForTask to keep widget alive...')
+    waitForTask(
+      Promise.race([fetchPromise, timeoutPromise])
       .then(response => {
+        if (handled) {
+          console.log('[CHECKLIST] Response received but already handled, ignoring')
+          return
+        }
+        clearTimeout(fallbackTimeoutId) // Clear the fallback timeout
+        console.log('[CHECKLIST] ✅ Fetch response received!')
+        console.log('[CHECKLIST] Response status:', response.status)
+        console.log('[CHECKLIST] Response ok:', response.ok)
+        console.log('[CHECKLIST] Response type:', response.type)
+        try {
+          if (response.headers && typeof response.headers.entries === 'function') {
+            console.log('[CHECKLIST] Response headers:', Object.fromEntries(response.headers.entries()))
+          } else {
+            console.log('[CHECKLIST] Response headers:', response.headers)
+          }
+        } catch (e) {
+          console.log('[CHECKLIST] Could not log headers:', e)
+        }
+        
         if (!response.ok) {
+          console.error('[CHECKLIST] Response not OK, status:', response.status, 'statusText:', response.statusText)
           throw new Error(`HTTP error! status: ${response.status}`)
         }
+        console.log('[CHECKLIST] Parsing JSON...')
         return response.json()
       })
+      .then((data: any) => {
+        // Raw GitHub URL returns JSON directly, no need to decode
+        // If it's already parsed JSON (raw URL response)
+        return data as ChecklistData
+      })
       .then((data: ChecklistData) => {
+        console.log('[CHECKLIST] JSON parsed successfully')
+        console.log('[CHECKLIST] Full JSON object:', JSON.stringify(data, null, 2))
+        console.log('[CHECKLIST] Data object (expanded):', data)
+        console.log('[CHECKLIST] Headline:', data?.headline)
+        console.log('[CHECKLIST] Sections count:', data?.sections?.length)
+        console.log('[CHECKLIST] Sections:', data?.sections)
+        if (data?.sections) {
+          data.sections.forEach((section, idx) => {
+            console.log(`[CHECKLIST] Section ${idx}:`, section.title, `(${section.items.length} items)`)
+            section.items.forEach((item, itemIdx) => {
+              console.log(`[CHECKLIST]   Item ${itemIdx}:`, item)
+            })
+          })
+        }
+        figma.notify('✓ Checklist loaded from GitHub', { timeout: 2000 })
         // Validate the structure
         if (data && data.headline && data.sections && Array.isArray(data.sections)) {
+          console.log('[CHECKLIST] Data structure valid, setting checklistData')
           setChecklistData(data)
           // Initialize checklist items for the external structure
           const newItems = data.sections.reduce((acc, section, sectionIndex) => {
@@ -570,27 +698,85 @@ function CheckboxWidget() {
             return acc
           }, {} as { [key: string]: boolean })
           setChecklistItems(newItems)
-          setHasFetchedExternal(true)
+          console.log('[CHECKLIST] External checklist loaded successfully')
+          handled = true // Only set handled after successful completion
         } else {
+          console.error('[CHECKLIST] Invalid checklist structure:', data)
           throw new Error('Invalid checklist structure')
         }
       })
       .catch(error => {
-        console.error('Failed to fetch checklist from GitHub:', error)
-        // Fallback to default bundled checklist
-        const fallbackData = defaultChecklistData as ChecklistData
-        setChecklistData(fallbackData)
-        // Initialize checklist items for the default structure
-        const newItems = fallbackData.sections.reduce((acc, section, sectionIndex) => {
-          section.items.forEach((_, itemIndex) => {
-            const key = `${sectionIndex}-${itemIndex}`
-            acc[key] = false
-          })
-          return acc
-        }, {} as { [key: string]: boolean })
-        setChecklistItems(newItems)
-        setHasFetchedExternal(true)
+        if (handled) {
+          console.log('[CHECKLIST] Error received but already handled, ignoring')
+          return
+        }
+        handled = true
+        clearTimeout(fallbackTimeoutId) // Clear the fallback timeout
+        console.error('[CHECKLIST] ❌ Fetch error caught in catch block')
+        console.error('[CHECKLIST] Error object:', error)
+        console.error('[CHECKLIST] Error name:', error?.name)
+        console.error('[CHECKLIST] Error message:', error?.message)
+        console.error('[CHECKLIST] Error stack:', error?.stack)
+        console.error('[CHECKLIST] Error toString:', error?.toString())
+        
+        // Check for specific error types
+        if (error?.name === 'TypeError' && error?.message?.includes('Failed to fetch')) {
+          console.error('[CHECKLIST] ⚠️ Network error detected - request may be blocked by CORS or network access')
+          figma.notify('⚠ Network request blocked. Check manifest networkAccess. Using default checklist.', { timeout: 4000 })
+        } else if (error?.message?.includes('timeout')) {
+          console.error('[CHECKLIST] ⏰ Timeout error - fetch took too long')
+          figma.notify('⚠ Request timeout. Using default checklist.', { timeout: 3000 })
+        } else {
+          figma.notify(`⚠ Fetch failed: ${error?.message || 'Unknown error'}. Using default checklist.`, { timeout: 3000 })
+        }
+        
+        // Fallback to bundled fallback checklist - ALWAYS set this
+        console.log('[CHECKLIST] Using fallback checklist')
+        const fallbackData = fallbackChecklistData as any
+        // Handle both import * as and default import cases
+        const data = fallbackData.default || fallbackData
+        console.log('[CHECKLIST] Fallback data:', data)
+        
+        // Set the checklist data - don't validate too strictly, just set it
+        if (data && data.sections) {
+          console.log('[CHECKLIST] Setting fallback checklistData')
+          setChecklistData(data as ChecklistData)
+          // Initialize checklist items for the default structure
+          const newItems = data.sections.reduce((acc: { [key: string]: boolean }, section: any, sectionIndex: number) => {
+            section.items.forEach((_: any, itemIndex: number) => {
+              const key = `${sectionIndex}-${itemIndex}`
+              acc[key] = false
+            })
+            return acc
+          }, {})
+          setChecklistItems(newItems)
+          console.log('[CHECKLIST] Fallback checklist set successfully')
+          figma.notify('✓ Using default checklist', { timeout: 2000 })
+        } else {
+          console.error('[CHECKLIST] Fallback data structure invalid:', data)
+          figma.notify('✗ Failed to load checklist', { error: true })
+        }
       })
+      .catch(err => {
+        console.error('[CHECKLIST] Outer catch - unexpected error in waitForTask:', err)
+        // Even if there's an outer error, set fallback
+        if (!checklistData) {
+          const fallbackData = (fallbackChecklistData as any).default || fallbackChecklistData as ChecklistData
+          const data = fallbackData.default || fallbackData
+          if (data && data.sections) {
+            setChecklistData(data as ChecklistData)
+            const newItems = data.sections.reduce((acc: { [key: string]: boolean }, section: any, sectionIndex: number) => {
+              section.items.forEach((_: any, itemIndex: number) => {
+                const key = `${sectionIndex}-${itemIndex}`
+                acc[key] = false
+              })
+              return acc
+            }, {})
+            setChecklistItems(newItems)
+          }
+        }
+      })
+    ) // End of waitForTask - keeps widget alive during async fetch
   }, [hasFetchedExternal])
 
   // Capture current user info when widget loads (EXACTLY matching WidgetUserBadge pattern)
@@ -806,27 +992,41 @@ function CheckboxWidget() {
         />
       </AutoLayout>
       )}
-      {showChecklist && status !== "ready-for-dev" && status !== "live" && status !== "live-app" && status !== "live-web" && status !== "archived" && (
-        <AutoLayout
-          name="checklist-section"
-          direction="vertical"
-          verticalAlignItems="start"
-          horizontalAlignItems="end"
-          spacing={16}
-          padding={0}
-          width="fill-parent"
-        >
-          <Text
-            fontSize={20}
-            fill={colors["content-1"]}
-            fontWeight="bold"
-            fontFamily="Vazirmatn"
-            horizontalAlignText="right"
+      {(() => {
+        const shouldShowChecklist = showChecklist && 
+          status !== "ready-for-dev" && 
+          status !== "live" && 
+          status !== "live-app" && 
+          status !== "live-web" && 
+          status !== "archived" && 
+          checklistData !== null && 
+          checklistData !== undefined
+        
+        if (!shouldShowChecklist) {
+          return null
+        }
+        
+        return (
+          <AutoLayout
+            name="checklist-section"
+            direction="vertical"
+            verticalAlignItems="start"
+            horizontalAlignItems="end"
+            spacing={16}
+            padding={0}
             width="fill-parent"
           >
-            {checklistData.headline}
-          </Text>
-          {checklistData && checklistData.sections.map((section, sectionIndex) => (
+            <Text
+              fontSize={20}
+              fill={colors["content-1"]}
+              fontWeight="bold"
+              fontFamily="Vazirmatn"
+              horizontalAlignText="right"
+              width="fill-parent"
+            >
+              {checklistData.headline}
+            </Text>
+            {checklistData.sections.map((section, sectionIndex) => (
             <AutoLayout
               key={sectionIndex}
               name="checklist-group"
@@ -865,9 +1065,10 @@ function CheckboxWidget() {
                 )
               })}
             </AutoLayout>
-          ))}
-        </AutoLayout>
-      )}
+            ))}
+          </AutoLayout>
+        )
+      })()}
       <AutoLayout
         name="copyright-wrapper"
         direction="horizontal"
