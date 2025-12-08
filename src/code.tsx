@@ -628,7 +628,7 @@ function CheckboxWidget() {
             return acc
           }, {} as { [key: string]: boolean })
           setChecklistItems(newItems)
-          figma.notify('✓ Checklist loaded from GitHub', { timeout: 2000 })
+          figma.notify('✓ Checklist loaded from URL', { timeout: 2000 })
           handled = true // Only set handled after successful completion
         } else {
           throw new Error('Invalid checklist structure')
