@@ -125,6 +125,219 @@ figma-signoff-widget/
 2. The checkbox will show a checkmark when selected
 3. Use the "Toggle Checklist" button in the property menu to show/hide the entire checklist section
 
+## External Checklist Loading
+
+The widget supports loading checklist content from external URLs, allowing you to maintain and update checklists without modifying the widget code itself.
+
+### How It Works
+
+When a widget is first inserted into a Figma file, it automatically attempts to fetch the checklist from a predefined GitHub URL:
+
+- **Default URL**: `https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/dk-checklist.json`
+
+The widget performs the following steps:
+
+1. **Fetch Attempt**: On widget initialization, it makes an HTTP GET request to the configured checklist URL
+2. **Validation**: The fetched JSON is validated to ensure it matches the expected structure
+3. **Storage**: If successful, the checklist data is stored in the widget's synced state
+4. **Fallback**: If the fetch fails (network error, invalid JSON, etc.), the widget automatically falls back to the bundled default checklist (`src/default-checklist.json`)
+
+### Benefits
+
+- **Dynamic Updates**: Update your checklist content by modifying the JSON file in your repository without rebuilding the widget
+- **Version Control**: Track checklist changes through Git history
+- **Team Collaboration**: Share checklist updates across your team instantly
+- **No Code Changes**: Modify checklist content without touching widget source code
+
+### Network Access
+
+The widget requires network access permissions to fetch external checklists. The domain `https://raw.githubusercontent.com` is allowlisted in `manifest.json` under `networkAccess.allowedDomains`.
+
+## Custom Checklist Setup
+
+You can create and host your own checklist JSON files to customize the checklist content for your team or project.
+
+### Step 1: Create Your Checklist JSON
+
+Create a JSON file following the checklist structure (see [Checklist JSON Structure](#checklist-json-structure) below). You can use the existing `dk-checklist.json` or `default-checklist.json` as a template.
+
+### Step 2: Host Your Checklist
+
+You have several options for hosting your checklist:
+
+#### Option A: GitHub (Recommended)
+
+1. Create a repository or use an existing one
+2. Upload your checklist JSON file to the repository
+3. Get the raw file URL:
+   - Navigate to your file in GitHub
+   - Click "Raw" button
+   - Copy the URL from the address bar
+   - Example: `https://raw.githubusercontent.com/username/repo/branch/path/to/checklist.json`
+
+#### Option B: Other Web Servers
+
+You can host your checklist on any web server that:
+- Serves files over HTTPS
+- Allows CORS requests from Figma
+- Returns valid JSON with proper content-type headers
+
+### Step 3: Update the Widget Code
+
+To use your custom checklist URL, modify the `DEFAULT_CHECKLIST_URL` constant in `src/code.tsx`:
+
+```typescript
+const DEFAULT_CHECKLIST_URL = 'https://your-domain.com/path/to/your-checklist.json'
+```
+
+Then rebuild the widget:
+
+```bash
+npm run build
+```
+
+### Step 4: Update Manifest (If Needed)
+
+If you're using a domain other than `raw.githubusercontent.com`, you'll need to add it to the `allowedDomains` array in `manifest.json`:
+
+```json
+"networkAccess": {
+  "allowedDomains": [
+    "https://s3-alpha.figma.com",
+    "https://s3.figma.com",
+    "https://raw.githubusercontent.com",
+    "https://your-domain.com"
+  ]
+}
+```
+
+### Best Practices
+
+- **Use HTTPS**: Always use HTTPS URLs for security
+- **Version Control**: Keep your checklist JSON in version control for change tracking
+- **Test First**: Test your JSON structure before deploying
+- **Backup**: Keep a local copy of your checklist as a backup
+- **CORS**: Ensure your server allows CORS if hosting on a custom domain
+
+## Checklist Data Persistence
+
+The widget uses Figma's `useSyncedState` hook to persist checklist data for each widget instance. This means:
+
+- **Per-Widget Storage**: Each widget instance stores its own checklist data and checked/unchecked states
+- **Persistence**: Checklist data and item states persist across Figma sessions
+- **No Re-fetching**: Once loaded, the checklist data is cached in the widget's state, so it won't re-fetch on every load
+- **State Synchronization**: All checklist interactions (checking/unchecking items) are automatically saved
+
+Note: The checklist data is stored per widget instance, not globally. Each new widget instance will fetch the checklist on first load.
+
+## Fallback Mechanism
+
+The widget includes a robust fallback system to ensure it always has checklist content available:
+
+1. **Primary Source**: Attempts to fetch from the configured external URL
+2. **Validation**: Validates the fetched JSON structure matches the expected format
+3. **Automatic Fallback**: If fetching fails or validation fails, automatically uses the bundled `default-checklist.json`
+4. **Silent Failure**: Errors are logged to the console but don't interrupt the widget's functionality
+
+The fallback ensures the widget remains functional even if:
+- The external URL is unreachable
+- Network connectivity issues occur
+- The external JSON has invalid structure
+- CORS restrictions block the request
+
+## Checklist JSON Structure
+
+The widget expects checklist data in a specific JSON format. Understanding this structure is essential for creating custom checklists.
+
+### Required Structure
+
+```json
+{
+  "sections": [
+    {
+      "title": "Section Title",
+      "items": [
+        "Checklist item 1",
+        "Checklist item 2",
+        "Checklist item 3"
+      ]
+    }
+  ]
+}
+```
+
+### Field Descriptions
+
+- **`sections`** (array, required): An array of checklist sections
+  - Each section represents a category or group of related checklist items
+  - Sections are displayed in the order they appear in the array
+  
+- **`title`** (string, required): The section heading
+  - Displayed as a bold title above the section's items
+  - Supports any Unicode characters (including Persian, Arabic, etc.)
+  - Example: `"کامپوننت‌ها"` or `"Components"`
+  
+- **`items`** (array of strings, required): The checklist items within the section
+  - Each string represents one checklist item
+  - Items are displayed as checkboxes in the order they appear
+  - Supports multi-line text and special characters
+  - Example: `"آخرین اپدیت کتابخانه گرفته شده باشد"`
+
+### Example
+
+Here's a complete example matching the structure:
+
+```json
+{
+  "sections": [
+    {
+      "title": "Components",
+      "items": [
+        "Latest library update has been applied",
+        "All colors/spacing are connected to tokens",
+        "No detached components or overrides exist"
+      ]
+    },
+    {
+      "title": "Pages",
+      "items": [
+        "Old design frames have been removed",
+        "Mobile design uses 375x812 dimensions",
+        "Responsive autolayout and constraints are applied"
+      ]
+    },
+    {
+      "title": "Edge Cases",
+      "items": [
+        "Back button navigation is handled",
+        "Error states are defined",
+        "Empty and loading states are considered"
+      ]
+    }
+  ]
+}
+```
+
+### Validation Rules
+
+The widget validates the following when loading a checklist:
+
+- ✅ `sections` must be an array
+- ✅ Each section must have a `title` (string)
+- ✅ Each section must have an `items` array
+- ✅ Each item in `items` must be a string
+- ✅ At least one section must exist
+
+If validation fails, the widget will fall back to the default checklist.
+
+### Tips for Creating Checklists
+
+- **Keep it Organized**: Use sections to group related items logically
+- **Be Specific**: Write clear, actionable checklist items
+- **Consider Length**: Very long items may wrap in the UI
+- **Test Locally**: Validate your JSON using a JSON validator before deploying
+- **Use UTF-8**: Ensure your JSON file is saved with UTF-8 encoding for proper character support
+
 ## Permissions
 
 This widget requires the following permission:
