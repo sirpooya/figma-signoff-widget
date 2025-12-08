@@ -1,10 +1,10 @@
 const { widget } = figma
 const { AutoLayout, Text, SVG, Image, Rectangle, useSyncedState, usePropertyMenu, useEffect, waitForTask } = widget
 
-import * as fallbackChecklistData from './fallback-checklist.json'
+import * as bundledChecklistData from './checklist.json'
 
-// External GitHub URL for remote-checklist.json
-const EXTERNAL_CHECKLIST_URL = 'https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/remote-checklist.json'
+// External GitHub URL for checklist.json (same file used as bundled fallback)
+const EXTERNAL_CHECKLIST_URL = 'https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/checklist.json'
 
 // Type definition for checklist structure
 type ChecklistData = {
@@ -614,7 +614,7 @@ function CheckboxWidget() {
       if (!handled && !checklistData) {
         console.error('[CHECKLIST] ⏰ Timeout - using fallback')
         handled = true
-        const fallbackData = (fallbackChecklistData as any).default || fallbackChecklistData as ChecklistData
+        const fallbackData = (bundledChecklistData as any).default || bundledChecklistData as ChecklistData
         const data = fallbackData.default || fallbackData
         if (data && data.sections) {
           setChecklistData(data as ChecklistData)
@@ -687,7 +687,7 @@ function CheckboxWidget() {
         
         // Fallback to bundled fallback checklist - ALWAYS set this
         console.log('[CHECKLIST] Using fallback checklist')
-        const fallbackData = fallbackChecklistData as any
+        const fallbackData = bundledChecklistData as any
         const data = fallbackData.default || fallbackData
         
         // Set the checklist data - don't validate too strictly, just set it
@@ -710,7 +710,7 @@ function CheckboxWidget() {
         console.error('[CHECKLIST] Outer catch:', err)
         // Even if there's an outer error, set fallback
         if (!checklistData) {
-          const fallbackData = (fallbackChecklistData as any).default || fallbackChecklistData as ChecklistData
+          const fallbackData = (bundledChecklistData as any).default || bundledChecklistData as ChecklistData
           const data = fallbackData.default || fallbackData
           if (data && data.sections) {
             setChecklistData(data as ChecklistData)
