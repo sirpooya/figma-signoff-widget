@@ -4,7 +4,7 @@ const { AutoLayout, Text, SVG, Image, Rectangle, useSyncedState, usePropertyMenu
 import * as bundledChecklistData from './checklist.json'
 
 // External GitHub URL for checklist.json (same file used as bundled fallback)
-const EXTERNAL_CHECKLIST_URL = 'https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/checklist.json'
+const EXTERNAL_CHECKLIST_URL = 'https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/checklist-fa.json'
 
 // Type definition for checklist structure
 type ChecklistData = {
@@ -662,7 +662,7 @@ function CheckboxWidget() {
             return acc
           }, {} as { [key: string]: boolean })
           setChecklistItems(newItems)
-          // figma.notify('Checklist loaded from URL', { timeout: 2000 })
+          // figma.notify('Checklist is up to date', { timeout: 2000 })
           handled = true // Only set handled after successful completion
         } else {
           throw new Error('Invalid checklist structure')
