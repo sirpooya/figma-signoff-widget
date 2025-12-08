@@ -1,7 +1,18 @@
 const { widget } = figma
 const { AutoLayout, Text, SVG, Image, Rectangle, useSyncedState, usePropertyMenu, useEffect } = widget
 
-import * as checklistData from './checklist.json'
+import * as defaultChecklistData from './default-checklist.json'
+
+// Default GitHub URL for checklist
+const DEFAULT_CHECKLIST_URL = 'https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/dk-checklist.json'
+
+// Type definition for checklist structure
+type ChecklistData = {
+  sections: Array<{
+    title: string
+    items: string[]
+  }>
+}
 
 // Color variables
 const colors = {
@@ -511,17 +522,71 @@ function CheckboxWidget() {
   // Current user info for avatar display
   const [currentUserName, setCurrentUserName] = useSyncedState<string>('currentUserName', "")
   const [currentUserPhotoUrl, setCurrentUserPhotoUrl] = useSyncedState<string | null>('currentUserPhotoUrl', null)
+  
+  // Store checklist data structure in syncedState
+  const [checklistData, setChecklistData] = useSyncedState<ChecklistData | null>(
+    'checklistData',
+    null
+  )
+  
   // Initialize checklist items state from JSON
   const [checklistItems, setChecklistItems] = useSyncedState<{ [key: string]: boolean }>(
     'checklistItems',
-    checklistData.sections.reduce((acc, section, sectionIndex) => {
-      section.items.forEach((_, itemIndex) => {
-        const key = `${sectionIndex}-${itemIndex}`
-        acc[key] = false
-      })
-      return acc
-    }, {} as { [key: string]: boolean })
+    {}
   )
+
+  // Load checklist data on widget initialization
+  useEffect(() => {
+    // If checklist data is already loaded, skip
+    if (checklistData) {
+      return
+    }
+    
+    // Try to fetch from GitHub URL
+    fetch(DEFAULT_CHECKLIST_URL)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        return response.json()
+      })
+      .then((data: ChecklistData) => {
+        // Validate the structure
+        if (data && data.sections && Array.isArray(data.sections)) {
+          setChecklistData(data)
+          // Initialize checklist items if not already set
+          if (Object.keys(checklistItems).length === 0) {
+            const initialItems = data.sections.reduce((acc, section, sectionIndex) => {
+              section.items.forEach((_, itemIndex) => {
+                const key = `${sectionIndex}-${itemIndex}`
+                acc[key] = false
+              })
+              return acc
+            }, {} as { [key: string]: boolean })
+            setChecklistItems(initialItems)
+          }
+        } else {
+          throw new Error('Invalid checklist structure')
+        }
+      })
+      .catch(error => {
+        console.error('Failed to fetch checklist from GitHub:', error)
+        // Fallback to default checklist
+        const fallbackData = defaultChecklistData as ChecklistData
+        setChecklistData(fallbackData)
+        // Initialize checklist items if not already set
+        if (Object.keys(checklistItems).length === 0) {
+          const initialItems = fallbackData.sections.reduce((acc, section, sectionIndex) => {
+            section.items.forEach((_, itemIndex) => {
+              const key = `${sectionIndex}-${itemIndex}`
+              acc[key] = false
+            })
+            return acc
+          }, {} as { [key: string]: boolean })
+          setChecklistItems(initialItems)
+        }
+      })
+  }, [checklistData])
 
   // Capture current user info when widget loads (EXACTLY matching WidgetUserBadge pattern)
   useEffect(() => {
@@ -756,7 +821,7 @@ function CheckboxWidget() {
           >
             چک‌لیست هنداف
           </Text>
-          {checklistData.sections.map((section, sectionIndex) => (
+          {checklistData && checklistData.sections.map((section, sectionIndex) => (
             <AutoLayout
               key={sectionIndex}
               name="checklist-group"
