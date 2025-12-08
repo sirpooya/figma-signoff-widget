@@ -8,6 +8,7 @@ const DEFAULT_CHECKLIST_URL = 'https://raw.githubusercontent.com/sirpooya/figma-
 
 // Type definition for checklist structure
 type ChecklistData = {
+  headline: string
   sections: Array<{
     title: string
     items: string[]
@@ -558,7 +559,7 @@ function CheckboxWidget() {
       })
       .then((data: ChecklistData) => {
         // Validate the structure
-        if (data && data.sections && Array.isArray(data.sections)) {
+        if (data && data.headline && data.sections && Array.isArray(data.sections)) {
           setChecklistData(data)
           // Initialize checklist items for the external structure
           const newItems = data.sections.reduce((acc, section, sectionIndex) => {
@@ -823,7 +824,7 @@ function CheckboxWidget() {
             horizontalAlignText="right"
             width="fill-parent"
           >
-            چک‌لیست هنداف
+            {checklistData.headline}
           </Text>
           {checklistData && checklistData.sections.map((section, sectionIndex) => (
             <AutoLayout
