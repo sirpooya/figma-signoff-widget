@@ -1,0 +1,32 @@
+{
+  "headline": "Handoff Checklist",
+  "sections": [
+    {
+      "title": "Components",
+      "items": [
+        "Pull the latest library updates and resolve all deprecated items.",
+        "Connect all colors and spacings to tokens; test by switching variable modes.",
+        "Avoid detach and overrides; All elements must appear as purple frames in Outline Mode (⌘Y). Detach only if allowed explicitly in guidelines.",
+        "Use the correct component for each use case.",
+        "Define all assets and repeatable patterns as local components."
+      ]
+    },
+    {
+      "title": "Pages",
+      "items": [
+        "Remove unnecessary libraries and keep only the Design System libraries.",
+        "Use device frame presets (375×812 for mobile, 1440×1024 for desktop).",
+        "Responsiveness – Apply autolayout and constraints for fluid resizing."
+      ]
+    },
+    {
+      "title": "Special Cases",
+      "items": [
+        "System back – consider navigation for browser and OS backs specially in multi-layer flows (multi-step modals, navbar, tabular).",
+        "Error states – validation errors, server issues, network timeouts, plus offline states and retry options.",
+        "Empty and loading states – no data, first-time use.",
+        "Extreme states – long text overflow and text truncation (max-line)."
+      ]
+    }
+  ]
+}

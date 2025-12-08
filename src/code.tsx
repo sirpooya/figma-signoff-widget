@@ -3,8 +3,8 @@ const { AutoLayout, Text, SVG, Image, Rectangle, useSyncedState, usePropertyMenu
 
 import * as fallbackChecklistData from './fallback-checklist.json'
 
-// External GitHub URL for dk-checklist.json
-const EXTERNAL_CHECKLIST_URL = 'https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/dk-checklist.json'
+// External GitHub URL for remote-checklist.json
+const EXTERNAL_CHECKLIST_URL = 'https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/remote-checklist.json'
 
 // Type definition for checklist structure
 type ChecklistData = {
@@ -677,16 +677,13 @@ function CheckboxWidget() {
         console.error('[CHECKLIST] ❌ Error:', error?.name, '-', error?.message)
         
         // Check for specific error types and show appropriate notification
-        if (error?.name === 'TypeError' && error?.message?.includes('Failed to fetch')) {
-          figma.notify('Using fallback checklist (Network blocked).', { timeout: 3000 })
-          // figma.notify('⚠ Network blocked. Using fallback checklist.', { timeout: 3000 })
-        } else if (error?.message?.includes('timeout')) {
-          figma.notify('Using fallback checklist (Request timeout).', { timeout: 3000 })
-          // figma.notify('⚠ Request timeout. Using fallback checklist.', { timeout: 3000 })
-        } else {
-          figma.notify('Using fallback checklist (Fetch failed).', { timeout: 3000 })
-          // figma.notify('⚠ Fetch failed. Using fallback checklist.', { timeout: 3000 })
-        }
+        // if (error?.name === 'TypeError' && error?.message?.includes('Failed to fetch')) {
+        //   figma.notify('Using fallback checklist (Network blocked).', { timeout: 3000 })
+        // } else if (error?.message?.includes('timeout')) {
+        //   figma.notify('Using fallback checklist (Request timeout).', { timeout: 3000 })
+        // } else {
+        //   figma.notify('Using fallback checklist (Fetch failed).', { timeout: 3000 })
+        // }
         
         // Fallback to bundled fallback checklist - ALWAYS set this
         console.log('[CHECKLIST] Using fallback checklist')

@@ -133,14 +133,14 @@ The widget supports loading checklist content from external URLs, allowing you t
 
 When a widget is first inserted into a Figma file, it automatically attempts to fetch the checklist from a predefined GitHub URL:
 
-- **Default URL**: `https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/dk-checklist.json`
+- **Default URL**: `https://raw.githubusercontent.com/sirpooya/figma-signoff-widget/refs/heads/main/src/remote-checklist.json`
 
 The widget performs the following steps:
 
 1. **Fetch Attempt**: On widget initialization, it makes an HTTP GET request to the configured checklist URL
 2. **Validation**: The fetched JSON is validated to ensure it matches the expected structure
 3. **Storage**: If successful, the checklist data is stored in the widget's synced state
-4. **Fallback**: If the fetch fails (network error, invalid JSON, etc.), the widget automatically falls back to the bundled default checklist (`src/default-checklist.json`)
+4. **Fallback**: If the fetch fails (network error, invalid JSON, etc.), the widget automatically falls back to the bundled default checklist (`src/fallback-checklist.json`)
 
 ### Benefits
 
@@ -159,7 +159,7 @@ You can create and host your own checklist JSON files to customize the checklist
 
 ### Step 1: Create Your Checklist JSON
 
-Create a JSON file following the checklist structure (see [Checklist JSON Structure](#checklist-json-structure) below). You can use the existing `dk-checklist.json` or `default-checklist.json` as a template.
+Create a JSON file following the checklist structure (see [Checklist JSON Structure](#checklist-json-structure) below). You can use the existing `remote-checklist.json` or `fallback-checklist.json` as a template.
 
 ### Step 2: Host Your Checklist
 
@@ -236,7 +236,7 @@ The widget includes a robust fallback system to ensure it always has checklist c
 
 1. **Primary Source**: Attempts to fetch from the configured external URL
 2. **Validation**: Validates the fetched JSON structure matches the expected format
-3. **Automatic Fallback**: If fetching fails or validation fails, automatically uses the bundled `default-checklist.json`
+3. **Automatic Fallback**: If fetching fails or validation fails, automatically uses the bundled `fallback-checklist.json`
 4. **Silent Failure**: Errors are logged to the console but don't interrupt the widget's functionality
 
 The fallback ensures the widget remains functional even if:
