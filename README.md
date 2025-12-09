@@ -34,19 +34,8 @@ A Figma widget for managing design sign-off processes with approval tracking, da
   - Shows placeholder avatar if user has no profile photo
 - Assignee information persists across widget instances
 
-### 4. **Checklist Section**
-- Three Persian-language checklist items:
-  - از کامپوننت صحیح برای usecaseها استفاده شده باشد
-  - حالت خالی و لودینگ — بدون داده، استفاده برای اولین بار
-  - حالت افلاین — ویژگی‌های محدود، تلاش مجدد
-- Each item can be checked/unchecked by clicking anywhere on the row
-- Uses Vazirmatn font for Persian text support
-- Right-to-left (RTL) text alignment
-- Can be toggled on/off via property menu
-
-### 5. **Property Menu Controls**
+### 4. **Property Menu Controls**
 - **Status Dropdown**: Change the design status (Review, Ready for Dev, Live, Archived)
-- **Toggle Checklist**: Show/hide the checklist section
 
 ## Installation
 
@@ -119,11 +108,6 @@ figma-signoff-widget/
 2. When switched to "Approved", your username and avatar will be automatically captured
 3. The assignee information will be displayed below the role name
 4. Click again to toggle back to "In-Review"
-
-### Using the Checklist
-1. Click anywhere on a checklist item row to toggle it
-2. The checkbox will show a checkmark when selected
-3. Use the "Toggle Checklist" button in the property menu to show/hide the entire checklist section
 
 ## External Checklist Loading
 
@@ -275,13 +259,13 @@ The widget expects checklist data in a specific JSON format. Understanding this 
 - **`title`** (string, required): The section heading
   - Displayed as a bold title above the section's items
   - Supports any Unicode characters (including Persian, Arabic, etc.)
-  - Example: `"کامپوننت‌ها"` or `"Components"`
+  - Example: `"Components"` or `"Design Review"`
   
 - **`items`** (array of strings, required): The checklist items within the section
   - Each string represents one checklist item
   - Items are displayed as checkboxes in the order they appear
   - Supports multi-line text and special characters
-  - Example: `"آخرین اپدیت کتابخانه گرفته شده باشد"`
+  - Example: `"Latest library update has been applied"`
 
 ### Example
 
