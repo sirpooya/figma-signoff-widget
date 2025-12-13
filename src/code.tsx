@@ -1033,7 +1033,7 @@ function CheckboxWidget() {
         padding={0}
         width="fill-parent"
         onClick={() => {
-          figma.openExternal('https://github.com/sirpooya/figma-signoff-widget')
+          figma.openExternal('https://www.figma.com/community/widget/1579908029366904668')
         }}
         hoverStyle={{ opacity: 0.8 }}
       >
