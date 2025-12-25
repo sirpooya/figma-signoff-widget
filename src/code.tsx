@@ -105,6 +105,10 @@ const featherMiniSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" wi
 <path d="M19.158 20.296c0.283 0.001 0.514 0.232 0.514 0.516s-0.231 0.513-0.514 0.514h-8.61c-0.284 0-0.514-0.23-0.514-0.514s0.23-0.516 0.514-0.516h8.61zM20.496 3.085c0.111 0.003 0.22 0.042 0.308 0.112 0.117 0.094 0.189 0.235 0.194 0.385 0.048 1.451-0.195 5.378-3.854 8.056-0.13 0.095-0.299 0.124-0.454 0.077l-2.672-0.815-0.224 2.732c-0.018 0.217-0.172 0.398-0.382 0.454-3.391 0.893-6.076 0.578-7.441 0.288-0.565 1.366-1.273 3.248-1.867 6.214-0.056 0.278-0.326 0.459-0.604 0.404s-0.459-0.326-0.403-0.604c0.671-3.357 1.487-5.38 2.091-6.812 2.976-7.055 10.598-9.579 15.198-10.48l0.11-0.010zM19.967 4.233c-4.416 0.957-10.787 3.335-13.577 9.174 1.253 0.242 3.539 0.461 6.41-0.233l0.248-2.995 0.022-0.114c0.035-0.109 0.106-0.204 0.203-0.27 0.129-0.087 0.29-0.112 0.439-0.067l3.027 0.924c2.651-2.058 3.167-4.866 3.229-6.42z"></path>
 </svg>`
 
+const linkSvg = `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M6.99121 9.50793C7.28411 9.21507 7.75985 9.21505 8.05273 9.50793C8.34526 9.80076 8.34526 10.2757 8.05273 10.5685L5.86035 12.7609C4.41317 14.252 4.43023 16.6296 5.90039 18.0997C7.37284 19.572 9.75547 19.5869 11.2461 18.1329L13.4316 15.9474C13.7246 15.6548 14.1994 15.6546 14.4922 15.9474C14.7849 16.2402 14.7848 16.715 14.4922 17.0079L12.293 19.2072C10.2145 21.234 6.89277 21.213 4.83984 19.1603C2.78678 17.1072 2.76565 13.7847 4.79297 11.7062L6.99121 9.50793ZM14.1377 8.80188C14.4305 8.50903 14.9053 8.50913 15.1982 8.80188C15.491 9.09478 15.4911 9.56958 15.1982 9.86243L9.8623 15.1984C9.56945 15.4911 9.09463 15.4911 8.80176 15.1984C8.50904 14.9055 8.509 14.4307 8.80176 14.1378L14.1377 8.80188ZM11.7061 4.79309C13.7846 2.76584 17.1071 2.78693 19.1602 4.83997C21.2129 6.89287 21.2338 10.2146 19.207 12.2931L17.0078 14.4923C16.7149 14.7849 16.2401 14.7851 15.9473 14.4923C15.6545 14.1995 15.6546 13.7247 15.9473 13.4318L18.1328 11.2462C19.5867 9.75558 19.5719 7.37294 18.0996 5.90051C16.6272 4.4281 14.2446 4.4134 12.7539 5.86731L10.5684 8.05286C10.2755 8.34542 9.80064 8.34542 9.50781 8.05286C9.21493 7.75996 9.21492 7.28422 9.50781 6.99133L11.7061 4.79309Z"/>
+</svg>`
+
 function getStatusIconSrc(status: Status, color: string): string {
   const svgMap: { [key in Status]: string } = {
     "review": inReviewSvg,
@@ -138,6 +142,10 @@ const getFeatherMiniIconSrc = (color: string) => {
   return featherMiniSvg
     .replace(/width="24" height="24"/, 'width="12" height="12"')
     .replace(/<path d="/, `<path fill="${color}" d="`)
+}
+
+const getLinkIconSrc = (color: string) => {
+  return linkSvg.replace(/<path d="/, `<path fill="${color}" d="`)
 }
 
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
@@ -552,6 +560,8 @@ function CheckboxWidget() {
   const [dsmPhotoUrl, setDsmPhotoUrl] = useSyncedState<string | null>('dsmPhotoUrl', null)
   const [dsmTimestamp, setDsmTimestamp] = useSyncedState<string | null>('dsmTimestamp', null)
   const [showChecklist, setShowChecklist] = useSyncedState('showChecklist', true)
+  const [showLinkSection, setShowLinkSection] = useSyncedState('showLinkSection', false)
+  const [links, setLinks] = useSyncedState<Array<{ label: string; url: string }>>('links', [])
   // Current user info for avatar display
   const [currentUserName, setCurrentUserName] = useSyncedState<string>('currentUserName', "")
   const [currentUserPhotoUrl, setCurrentUserPhotoUrl] = useSyncedState<string | null>('currentUserPhotoUrl', null)
@@ -772,7 +782,7 @@ function CheckboxWidget() {
     [
       ...(designerSignedOff ? [] : [
         {
-          itemType: "action",
+          itemType: "action" as const,
           tooltip: "Sign Off",
           propertyName: "signOff",
           icon: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
@@ -782,7 +792,7 @@ function CheckboxWidget() {
       ]),
       ...(designerSignedOff ? [
         {
-          itemType: "dropdown",
+          itemType: "dropdown" as const,
           options: [
             { option: "review", label: "🟠 In-Review" },
             { option: "ready-for-dev", label: "🟢 Ready for Dev" },
@@ -796,6 +806,12 @@ function CheckboxWidget() {
           propertyName: "status",
         },
       ] : []),
+      {
+        itemType: "action" as const,
+        tooltip: showLinkSection ? "Hide Links" : "Show Links",
+        propertyName: "toggleLinkSection",
+        icon: linkSvg.replace(/width="24" height="24"/, 'width="16" height="16"').replace(/<path d="/, `<path fill="white" d="`),
+      },
     ],
     ({ propertyName, propertyValue }) => {
       if (propertyName === "signOff") {
@@ -809,6 +825,9 @@ function CheckboxWidget() {
         if (newStatus === "review") {
           setShowChecklist(true)
         }
+      }
+      if (propertyName === "toggleLinkSection") {
+        setShowLinkSection(!showLinkSection)
       }
     }
   )
@@ -1025,6 +1044,193 @@ function CheckboxWidget() {
           </AutoLayout>
         )
       })()}
+      {showLinkSection && (
+        <AutoLayout
+          name="link-section"
+          direction="vertical"
+          verticalAlignItems="start"
+          horizontalAlignItems="start"
+          spacing={12}
+          padding={0}
+          width="fill-parent"
+          stroke={{
+            type: "solid",
+            color: colors["border-1"]
+          }}
+          strokeWidth={1}
+          cornerRadius={12}
+        >
+          <AutoLayout
+            name="link-section-header"
+            direction="horizontal"
+            verticalAlignItems="center"
+            horizontalAlignItems="space-between"
+            spacing={12}
+            padding={16}
+            width="fill-parent"
+            stroke={{
+              type: "solid",
+              color: colors["border-1"]
+            }}
+            strokeWidth={1}
+            strokeAlign="inside"
+          >
+            <Text
+              fontSize={16}
+              fill={colors["content-1"]}
+              fontWeight="bold"
+              width="fill-parent"
+            >
+              Links
+            </Text>
+            <AutoLayout
+              name="add-link-button"
+              direction="horizontal"
+              verticalAlignItems="center"
+              horizontalAlignItems="center"
+              spacing={6}
+              padding={{ left: 12, right: 12, top: 6, bottom: 6 }}
+              fill={colors.link}
+              cornerRadius={8}
+              onClick={async () => {
+                // Show modal prompt for adding link
+                const modalHtml = `
+                  <div style="padding: 16px; font-family: Inter, sans-serif;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">Add Link</h3>
+                    <div style="margin-bottom: 12px;">
+                      <label style="display: block; margin-bottom: 4px; font-size: 12px; color: #5C5C5C;">Label:</label>
+                      <input id="linkLabel" type="text" style="width: 100%; padding: 8px; border: 1px solid #ECEDEF; border-radius: 4px; font-size: 12px; box-sizing: border-box;" placeholder="e.g., Design File" />
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                      <label style="display: block; margin-bottom: 4px; font-size: 12px; color: #5C5C5C;">URL:</label>
+                      <input id="linkUrl" type="text" style="width: 100%; padding: 8px; border: 1px solid #ECEDEF; border-radius: 4px; font-size: 12px; box-sizing: border-box;" placeholder="https://..." />
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                      <button id="cancelBtn" style="padding: 8px 16px; border: 1px solid #ECEDEF; border-radius: 4px; background: white; cursor: pointer; font-size: 12px;">Cancel</button>
+                      <button id="addBtn" style="padding: 8px 16px; border: none; border-radius: 4px; background: #1672DD; color: white; cursor: pointer; font-size: 12px;">Add</button>
+                    </div>
+                  </div>
+                  <script>
+                    document.getElementById('addBtn').onclick = () => {
+                      const label = document.getElementById('linkLabel').value.trim();
+                      const url = document.getElementById('linkUrl').value.trim();
+                      if (label && url) {
+                        parent.postMessage({ pluginMessage: { type: 'addLink', label, url } }, '*');
+                      }
+                    };
+                    document.getElementById('cancelBtn').onclick = () => {
+                      parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
+                    };
+                    document.getElementById('linkUrl').onkeydown = (e) => {
+                      if (e.key === 'Enter') {
+                        document.getElementById('addBtn').click();
+                      }
+                    };
+                    document.getElementById('linkLabel').onkeydown = (e) => {
+                      if (e.key === 'Enter') {
+                        document.getElementById('linkUrl').focus();
+                      }
+                    };
+                  </script>
+                `
+                
+                figma.showUI(modalHtml, { width: 320, height: 180 })
+                
+                figma.ui.onmessage = (msg: any) => {
+                  if (msg.pluginMessage) {
+                    const { type, label, url } = msg.pluginMessage
+                    if (type === 'addLink') {
+                      const newLinks = [...links, { label, url }]
+                      setLinks(newLinks)
+                      figma.closePlugin()
+                    } else if (type === 'cancel') {
+                      figma.closePlugin()
+                    }
+                  }
+                }
+              }}
+              hoverStyle={{ opacity: 0.8 }}
+            >
+              <SVG
+                src={getLinkIconSrc(colors["on-info"])}
+                width={16}
+                height={16}
+              />
+              <Text
+                fontSize={12}
+                fill={colors["on-info"]}
+                fontWeight="medium"
+                fontFamily="Inter"
+              >
+                Add Link
+              </Text>
+            </AutoLayout>
+          </AutoLayout>
+          {links.length > 0 ? (
+            <AutoLayout
+              name="links-list"
+              direction="vertical"
+              verticalAlignItems="start"
+              spacing={0}
+              padding={0}
+              width="fill-parent"
+            >
+              {links.map((link, index) => (
+                <AutoLayout
+                  key={index}
+                  name="link-item"
+                  direction="horizontal"
+                  verticalAlignItems="center"
+                  spacing={12}
+                  padding={16}
+                  width="fill-parent"
+                  stroke={index < links.length - 1 ? {
+                    type: "solid",
+                    color: colors["border-1"]
+                  } : undefined}
+                  strokeWidth={index < links.length - 1 ? 1 : undefined}
+                  strokeAlign="inside"
+                  onClick={() => {
+                    figma.openExternal(link.url)
+                  }}
+                  hoverStyle={{ opacity: 0.8 }}
+                >
+                  <SVG
+                    src={getLinkIconSrc(colors.link)}
+                    width={16}
+                    height={16}
+                  />
+                  <Text
+                    fontSize={14}
+                    fill={colors.link}
+                    fontWeight="normal"
+                    width="fill-parent"
+                  >
+                    {link.label}
+                  </Text>
+                </AutoLayout>
+              ))}
+            </AutoLayout>
+          ) : (
+            <AutoLayout
+              name="empty-links"
+              direction="horizontal"
+              verticalAlignItems="center"
+              horizontalAlignItems="center"
+              padding={16}
+              width="fill-parent"
+            >
+              <Text
+                fontSize={14}
+                fill={colors["content-3"]}
+                fontWeight="normal"
+              >
+                No links added yet
+              </Text>
+            </AutoLayout>
+          )}
+        </AutoLayout>
+      )}
       <AutoLayout
         name="copyright-wrapper"
         direction="horizontal"

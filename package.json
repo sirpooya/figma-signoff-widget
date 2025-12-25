@@ -4,8 +4,10 @@
   "description": "Figma widget for design sign-off process",
   "scripts": {
     "test": "tsc -p src --noEmit",
-    "build": "esbuild src/code.tsx --bundle --outfile=dist/code.js",
-    "dev": "concurrently -n tsc,build 'npm run test -- --preserveWatchOutput --watch' 'npm run build -- --watch'"
+    "build": "esbuild src/code.tsx --bundle --outfile=dist/code.js --format=esm --target=es6 --jsx=transform --jsx-factory=figma.widget.h --jsx-fragment=figma.widget.Fragment",
+    "build:watch": "esbuild src/code.tsx --bundle --outfile=dist/code.js --format=esm --target=es6 --jsx=transform --jsx-factory=figma.widget.h --jsx-fragment=figma.widget.Fragment --watch",
+    "dev": "npm run build:watch",
+    "dev:full": "concurrently -n tsc,build 'npm run test -- --preserveWatchOutput --watch' 'npm run build:watch'"
   },
   "author": "",
   "license": "MIT",
