@@ -924,7 +924,7 @@ function CheckboxWidget() {
               font-family: inherit;
             }
             input::placeholder {
-              color: #A2A2A2;
+              color:rgb(198, 198, 198);
               font-weight: normal;
             }
             input:focus {
