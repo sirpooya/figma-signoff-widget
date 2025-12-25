@@ -300,10 +300,10 @@ function ApprovalRow({ role, approved, assignee, photoUrl, timestamp, onToggle, 
   return (
     <AutoLayout
       name="approval-row"
-      direction="horizontal"
-      verticalAlignItems="center"
-      spacing={12}
-      padding={16}
+      direction="vertical"
+      verticalAlignItems="start"
+      spacing={2}
+      padding={{ left: 16, top: 12, right: 12, bottom: 16 }}
       width="fill-parent"
       stroke={hasBorderBottom ? {
         type: "solid",
@@ -313,10 +313,11 @@ function ApprovalRow({ role, approved, assignee, photoUrl, timestamp, onToggle, 
       strokeAlign="center"
     >
       <AutoLayout
-        name="approval-wrapper"
-        direction="vertical"
-        verticalAlignItems="start"
-        spacing={6}
+        name="role-wrapper"
+        direction="horizontal"
+        verticalAlignItems="center"
+        spacing="auto"
+        padding={0}
         width="fill-parent"
       >
         <Text
@@ -324,83 +325,99 @@ function ApprovalRow({ role, approved, assignee, photoUrl, timestamp, onToggle, 
           fontSize={14}
           fill={colors["content-1"]}
           fontWeight="medium"
-          width="fill-parent"
+          width="hug-contents"
         >
           {role}
         </Text>
         <AutoLayout
-          name="assignee-wrapper"
+          name="status-badge"
           direction="horizontal"
           verticalAlignItems="center"
+          horizontalAlignItems="center"
+          padding={{ left: 12, right: 12, top: 6, bottom: 6 }}
+          fill={config.color}
+          cornerRadius={8}
           spacing={6}
-          padding={0}
-          width="fill-parent"
+          onClick={onToggle}
+          hoverStyle={{ opacity: 0.8 }}
         >
-          {photoUrl ? (
-            <Image
-              name="avatar"
-              cornerRadius={12}
-              width={16}
-              height={16}
-              src={photoUrl}
-            />
-          ) : (
-            <SVG
-              name="avatar"
-              src={defaultAvatarSvg}
-              width={16}
-              height={16}
-            />
-          )}
           <Text
-            name="assignee"
-            fontSize={14}
-            fill={colors["content-2"]}
-            fontWeight="normal"
+            fontFamily="Inter"
+            fontSize={12}
+            fill={config.textColor}
+            fontWeight="medium"
+            letterSpacing={2}
           >
-            {assignee || "Assignee"}
+            {config.label.toUpperCase()}
           </Text>
-          {approved && timestamp && (
-            <>
-              <Text
-                fontSize={14}
-                fill={colors["content-3"]}
-                fontWeight="normal"
-              >
-                –
-              </Text>
-              <Text
-                fontSize={14}
-                fill={colors["content-3"]}
-                fontWeight="normal"
-              >
-                {timestamp}
-              </Text>
-            </>
-          )}
         </AutoLayout>
       </AutoLayout>
       <AutoLayout
-        name="status-badge"
+        name="assignee-wrapper"
         direction="horizontal"
         verticalAlignItems="center"
-        horizontalAlignItems="center"
-        padding={{ left: 12, right: 12, top: 6, bottom: 6 }}
-        fill={config.color}
-        cornerRadius={8}
         spacing={6}
-        onClick={onToggle}
-        hoverStyle={{ opacity: 0.8 }}
+        padding={0}
+        width="fill-parent"
       >
-        <Text
-          fontFamily="Inter"
-          fontSize={12}
-          fill={config.textColor}
-          fontWeight="medium"
-          letterSpacing={2}
+        {photoUrl ? (
+          <Image
+            name="avatar"
+            cornerRadius={12}
+            width={16}
+            height={16}
+            src={photoUrl}
+          />
+        ) : (
+          <SVG
+            name="avatar"
+            src={defaultAvatarSvg}
+            width={16}
+            height={16}
+          />
+        )}
+        <AutoLayout
+          name="assignee-text-wrapper"
+          direction="horizontal"
+          verticalAlignItems="center"
+          spacing={0}
+          padding={0}
+          width="hug-contents"
+          maxWidth={96}
         >
-          {config.label.toUpperCase()}
-        </Text>
+          <Text
+            name="assignee"
+            fontSize={14}
+            fontWeight="normal"
+            fill={colors["content-2"]}
+            width="fill-parent"
+            maxLines={1}
+            truncate={true}
+          >
+            {assignee || "Assignee"}
+          </Text>
+        </AutoLayout>
+        {approved && timestamp && (
+          <>
+            <Text
+              fontSize={14}
+              fontWeight="normal"
+              fill={colors["content-3"]}
+              width="hug-contents"
+            >
+              –
+            </Text>
+            <Text
+              name="timestamp"
+              fontSize={14}
+              fontWeight="normal"
+              fill={colors["content-3"]}
+              width="hug-contents"
+            >
+              {timestamp}
+            </Text>
+          </>
+        )}
       </AutoLayout>
     </AutoLayout>
   )
@@ -1134,19 +1151,28 @@ function CheckboxWidget() {
                   </script>
                 `
                 
-                figma.showUI(modalHtml, { width: 320, height: 180 })
-                
-                figma.ui.onmessage = (msg: any) => {
-                  if (msg.pluginMessage) {
-                    const { type, label, url } = msg.pluginMessage
-                    if (type === 'addLink') {
-                      const newLinks = [...links, { label, url }]
-                      setLinks(newLinks)
-                      figma.closePlugin()
-                    } else if (type === 'cancel') {
-                      figma.closePlugin()
+                try {
+                  figma.showUI(modalHtml, { width: 320, height: 180 })
+                  
+                  const messageHandler = (msg: any) => {
+                    if (msg && msg.pluginMessage) {
+                      const { type, label, url } = msg.pluginMessage
+                      if (type === 'addLink' && label && url) {
+                        const newLinks = [...links, { label, url }]
+                        setLinks(newLinks)
+                        figma.ui.close()
+                        figma.ui.off('message', messageHandler)
+                      } else if (type === 'cancel') {
+                        figma.ui.close()
+                        figma.ui.off('message', messageHandler)
+                      }
                     }
                   }
+                  
+                  figma.ui.on('message', messageHandler)
+                } catch (error) {
+                  console.error('Error showing modal:', error)
+                  figma.notify('Failed to open link dialog', { timeout: 2000, error: true })
                 }
               }}
               hoverStyle={{ opacity: 0.8 }}
